@@ -10,7 +10,20 @@ using Microsoft.Graph.Beta.Groups.Item.Sites.Item.ContentModels;
 
 namespace User_Security_Actions
 {
-    static class Program
+    enum PhoneOption
+    {
+        Mobile,
+        AlternateMobile,
+        Office
+    }
+
+    enum MethodType
+    {
+        Email,
+        Phone,
+    }
+
+     class Program
     {
         /// <summary>
         /// The main entry point for the application.
@@ -18,16 +31,40 @@ namespace User_Security_Actions
         /// 
 
         public static string[] scopes = new string[] { "user.readwrite.all  User.EnableDisableAccount.All " +
-                "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All" };
+                "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All" };
         public static string ClientId = "492bc3cf-c421-4332-9e96-f56547f3ed56";
+
+        public const string platformCredMethod = "#microsoft.graph.platformCredentialAuthenticationMethod";
+        public const string wHFBAuthMethod = "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod";
+        public const string tAPAuthMethod = "#microsoft.graph.temporaryAccessPassAuthenticationMethod";
+        public const string softOathAuthMethod = "#microsoft.graph.softwareOathAuthenticationMethod";
+        public const string phoneAuthMethod = "#microsoft.graph.phoneAuthenticationMethod";
+        public const string passwordAuthMethod = "#microsoft.graph.passwordAuthenticationMethod";
+        public const string mSAuthenticatorAuthMethod = "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod";
+        public const string hardOathAuthMethod = "#microsoft.graph.hardwareOathAuthenticationMethod";
+        public const string fido2AuthMethod = "#microsoft.graph.fido2AuthenticationMethod";
+        public const string emailAuthMethod = "#microsoft.graph.emailAuthenticationMethod";
+
+        //These should not be used anymore and have been deprecated, but have been left in for backwards compatibility?
+        public const string appPasswordAuthMethod = "#microsoft.graph.appPasswordAuthenticationMethod";
+        public const string phoneAppOTPAuthMethod = "#microsoft.graph.phoneAppOTPAuthenticationMethod";
+        public const string phoneAppNotificationAuthMethhod = "#microsoft.graph.phoneAppNotificationAuthenticationMethod";
+        public const string passwordlessMSAuthenticatorMethod = "#microsoft.graph.passwordlessMicrosoftAuthenticatorAuthenticationMethod";
+
         //public static string upn;
         public static string input;
         public static bool signedIn = false;
         public static bool validUser = false;
+        public static bool existPhoneMethods = false;
         public static InteractiveBrowserCredential token;
         public static GraphServiceClient graphClient;
         public static Microsoft.Graph.Beta.Models.User user;
         public static Microsoft.Graph.Beta.Models.User admin;
+        public static PhoneOption phoneOptions;
+        public static MethodType methodType;
+        public static DateTime tapStart;
+        public static int tapDurationInMinutes;
+        public static bool tapReusable;
 
         [STAThread]
         static void Main()

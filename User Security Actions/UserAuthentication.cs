@@ -16,7 +16,7 @@ namespace User_Security_Actions
 
         }
 
-        public static async Task<InteractiveBrowserCredential> SignInUserAndGetToken (string[] scopes, string ClientId)
+        public static InteractiveBrowserCredential SignInUserAndGetToken (string[] scopes, string ClientId)
         {
 
             InteractiveBrowserCredentialOptions interactiveBrowserCredentialOptions = new InteractiveBrowserCredentialOptions()
