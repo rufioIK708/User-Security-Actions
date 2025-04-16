@@ -528,17 +528,24 @@ namespace User_Security_Actions
 
         private async void signin_Click(object sender, EventArgs e)
         {
+            //variable to check if the sign-in was successful
             bool successful = false;
 
+            //initialize the token
             Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
+            //initialize the Graph client
             Program.graphClient = new GraphServiceClient(Program.token, Program.scopes);
 
+            //verify the user is signed in
             try
             {
-
+                //get the signed in user
                 User signedInUser = await Program.graphClient.Me.GetAsync();
+                //set the tracking var to true
                 successful = true;
+                //add to the display box
                 modifyRichTextBox(", you signed in as: ");
+                //print the user status
                 printUserStatus(signedInUser);
             }
             catch (Exception ex)
@@ -546,6 +553,7 @@ namespace User_Security_Actions
                 MessageBox.Show(ex.Message + "\n" + ex.HelpLink + "\nSign-in failed.");
             }
 
+            //update the state of the application
             if (successful)
             {
                 Program.signedIn = true;
