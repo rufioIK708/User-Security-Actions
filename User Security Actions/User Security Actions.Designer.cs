@@ -147,6 +147,7 @@
             this.buttonAddTapMethod.TabIndex = 10;
             this.buttonAddTapMethod.Text = "Add TAP Method";
             this.buttonAddTapMethod.UseVisualStyleBackColor = true;
+            this.buttonAddTapMethod.Visible = false;
             this.buttonAddTapMethod.Click += new System.EventHandler(this.buttonAddTapMethod_Click);
             // 
             // buttonRevokeSessions
@@ -326,6 +327,7 @@
             this.buttonFunctions.TabIndex = 14;
             this.buttonFunctions.Text = "Test functions";
             this.buttonFunctions.UseVisualStyleBackColor = true;
+            this.buttonFunctions.Visible = false;
             this.buttonFunctions.Click += new System.EventHandler(this.buttonFunctions_Click);
             // 
             // Form1

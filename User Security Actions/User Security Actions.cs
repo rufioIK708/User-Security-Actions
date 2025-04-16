@@ -599,9 +599,16 @@ namespace User_Security_Actions
 
             }
 
+            //if UPN is not null, we successfully got a user
             if (null != Program.user.UserPrincipalName)
                 result = true;
 
+            /**********************
+             * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
+             * However, when calling Graph API, you are able to perform these actions on yourself.
+             * This check is not neccessary, we'll let the API let us know when we are doing something we
+             * shouldn't be, for now.
+             
             if (Program.admin.Id == Program.user.Id)
             {
                 MessageBox.Show("This app is intended to make administrator changes." +
@@ -609,7 +616,9 @@ namespace User_Security_Actions
                     "\nPlease select a different user");
                 result = false;
             }
+            *******************************/
 
+            //if user was found successfully
             if (result)
             {
                 modifyRichTextBox("\n\nUser found: ");
@@ -617,6 +626,7 @@ namespace User_Security_Actions
                 //getAndPrintMFA(app, upn);
                 labelSelectedUser.Text = "The selected user is: " + Program.user.DisplayName;
             }
+            //user was not found successfully
             else
                 modifyRichTextBox("\n\nUser not found!");
 
@@ -1044,6 +1054,22 @@ namespace User_Security_Actions
         private void buttonSignOut_Click(object sender, EventArgs e)
         {
             //Program.graphClient.
+            Program.signedIn = false;
+            Program.validUser = false;
+
+
+            /*
+             * 
+            */
+
+            Program.input = null;
+            Program.existPhoneMethods = false;
+            Program.graphClient = null;
+            Program.user = null;
+            Program.token = null;
+            
+            Program.admin = null;
+            Form1_Load(sender, e);
         }
 
         private async void buttonFunctions_Click(object sender, EventArgs e)

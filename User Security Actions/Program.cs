@@ -29,11 +29,13 @@ namespace User_Security_Actions
         /// The main entry point for the application.
         /// </summary>
         /// 
-
+        // static variables needed by the app
+        // - scopes and clientID for connecting to Entra/Graph
         public static string[] scopes = new string[] { "user.readwrite.all  User.EnableDisableAccount.All " +
                 "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All" };
         public static string ClientId = "492bc3cf-c421-4332-9e96-f56547f3ed56";
 
+        // - values for MFA odata.type to check for various methods and call the specific API
         public const string platformCredMethod = "#microsoft.graph.platformCredentialAuthenticationMethod";
         public const string wHFBAuthMethod = "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod";
         public const string tAPAuthMethod = "#microsoft.graph.temporaryAccessPassAuthenticationMethod";
@@ -45,19 +47,23 @@ namespace User_Security_Actions
         public const string fido2AuthMethod = "#microsoft.graph.fido2AuthenticationMethod";
         public const string emailAuthMethod = "#microsoft.graph.emailAuthenticationMethod";
 
-        //These should not be used anymore and have been deprecated, but have been left in for backwards compatibility?
+        // - - These should not be used anymore and have been deprecated, but have been left in for backwards compatibility?
         public const string appPasswordAuthMethod = "#microsoft.graph.appPasswordAuthenticationMethod";
         public const string phoneAppOTPAuthMethod = "#microsoft.graph.phoneAppOTPAuthenticationMethod";
         public const string phoneAppNotificationAuthMethhod = "#microsoft.graph.phoneAppNotificationAuthenticationMethod";
         public const string passwordlessMSAuthenticatorMethod = "#microsoft.graph.passwordlessMicrosoftAuthenticatorAuthenticationMethod";
 
+        // - variables used to store data for later lookup/use
         //public static string upn;
+
+        
+        public static InteractiveBrowserCredential token;
+        public static GraphServiceClient graphClient; 
         public static string input;
         public static bool signedIn = false;
         public static bool validUser = false;
         public static bool existPhoneMethods = false;
-        public static InteractiveBrowserCredential token;
-        public static GraphServiceClient graphClient;
+        
         public static Microsoft.Graph.Beta.Models.User user;
         public static Microsoft.Graph.Beta.Models.User admin;
         public static PhoneOption phoneOptions;
