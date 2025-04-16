@@ -136,7 +136,6 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1079, 190);
             this.tableLayoutPanel1.TabIndex = 0;
-            this.tableLayoutPanel1.Visible = false;
             // 
             // buttonAddTapMethod
             // 
@@ -210,7 +209,6 @@
             this.getAUser.TabIndex = 0;
             this.getAUser.Text = "Get a User";
             this.getAUser.UseVisualStyleBackColor = true;
-            this.getAUser.Visible = false;
             this.getAUser.Click += new System.EventHandler(this.getAUser_Click);
             // 
             // buttonAddMethod

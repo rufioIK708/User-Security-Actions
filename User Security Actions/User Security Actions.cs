@@ -19,6 +19,7 @@ using Microsoft.Graph.Beta.Models.ODataErrors;
 using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
 using User_Security_Actions;
 using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
+using Microsoft.Kiota.Abstractions;
 
 
 namespace User_Security_Actions
@@ -46,6 +47,8 @@ namespace User_Security_Actions
                 signin.Enabled = false;
                 splitContainer1.Show();
                 splitContainer1.Enabled = true;
+                getAUser.Show();
+                getAUser.Enabled = true;
 
 
                 if (Program.validUser)
@@ -1082,9 +1085,21 @@ namespace User_Security_Actions
                 //var response = await Program.graphClient.Policies.
                 //    AuthenticationMethodsPolicy.GetAsync();
 
+                //get the TAP method policy
+                //unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
+                //makes it impossible to generate a UI that the required restraints.
+                //trying to select 'AdditionalProperties' but it doesn't work
+                //var result = await Program.graphClient.Policies.
+                //    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].
+                //       GetAsync((requestConfiguration) =>
+                //        {
+                //           requestConfiguration.QueryParameters.Select = new[] { "AdditionalProperties" };
+                //        });
 
+                //get the TAP method policy
                 var result = await Program.graphClient.Policies.
-                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
+                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].
+                       GetAsync();
 
                 //serialize the response
                 var options = new JsonSerializerOptions { WriteIndented = true };
