@@ -32,6 +32,8 @@
             this.signin = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonAddTapMethod = new System.Windows.Forms.Button();
+            this.buttonRevokeSessions = new System.Windows.Forms.Button();
             this.labelSelectedUser = new System.Windows.Forms.Label();
             this.buttonRegisterFido2Passkey = new System.Windows.Forms.Button();
             this.buttonToggleAccount = new System.Windows.Forms.Button();
@@ -45,8 +47,6 @@
             this.buttonSignOut = new System.Windows.Forms.Button();
             this.displayBox = new System.Windows.Forms.RichTextBox();
             this.buttonFunctions = new System.Windows.Forms.Button();
-            this.buttonRevokeSessions = new System.Windows.Forms.Button();
-            this.buttonAddTapMethod = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -136,6 +136,32 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1079, 190);
             this.tableLayoutPanel1.TabIndex = 0;
+            this.tableLayoutPanel1.Visible = false;
+            // 
+            // buttonAddTapMethod
+            // 
+            this.buttonAddTapMethod.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonAddTapMethod.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonAddTapMethod.Location = new System.Drawing.Point(541, 144);
+            this.buttonAddTapMethod.Name = "buttonAddTapMethod";
+            this.buttonAddTapMethod.Size = new System.Drawing.Size(263, 43);
+            this.buttonAddTapMethod.TabIndex = 10;
+            this.buttonAddTapMethod.Text = "Add TAP Method";
+            this.buttonAddTapMethod.UseVisualStyleBackColor = true;
+            this.buttonAddTapMethod.Click += new System.EventHandler(this.buttonAddTapMethod_Click);
+            // 
+            // buttonRevokeSessions
+            // 
+            this.buttonRevokeSessions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonRevokeSessions.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonRevokeSessions.Location = new System.Drawing.Point(272, 144);
+            this.buttonRevokeSessions.Name = "buttonRevokeSessions";
+            this.buttonRevokeSessions.Size = new System.Drawing.Size(263, 43);
+            this.buttonRevokeSessions.TabIndex = 9;
+            this.buttonRevokeSessions.Text = "Revoke Sign-in Sessions";
+            this.buttonRevokeSessions.UseVisualStyleBackColor = true;
+            this.buttonRevokeSessions.Visible = false;
+            this.buttonRevokeSessions.Click += new System.EventHandler(this.buttonRevokeSessions_Click);
             // 
             // labelSelectedUser
             // 
@@ -304,31 +330,6 @@
             this.buttonFunctions.UseVisualStyleBackColor = true;
             this.buttonFunctions.Click += new System.EventHandler(this.buttonFunctions_Click);
             // 
-            // buttonRevokeSessions
-            // 
-            this.buttonRevokeSessions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonRevokeSessions.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonRevokeSessions.Location = new System.Drawing.Point(272, 144);
-            this.buttonRevokeSessions.Name = "buttonRevokeSessions";
-            this.buttonRevokeSessions.Size = new System.Drawing.Size(263, 43);
-            this.buttonRevokeSessions.TabIndex = 9;
-            this.buttonRevokeSessions.Text = "Revoke Sign-in Sessions";
-            this.buttonRevokeSessions.UseVisualStyleBackColor = true;
-            this.buttonRevokeSessions.Visible = false;
-            this.buttonRevokeSessions.Click += new System.EventHandler(this.buttonRevokeSessions_Click);
-            // 
-            // buttonAddTapMethod
-            // 
-            this.buttonAddTapMethod.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonAddTapMethod.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonAddTapMethod.Location = new System.Drawing.Point(541, 144);
-            this.buttonAddTapMethod.Name = "buttonAddTapMethod";
-            this.buttonAddTapMethod.Size = new System.Drawing.Size(263, 43);
-            this.buttonAddTapMethod.TabIndex = 10;
-            this.buttonAddTapMethod.Text = "Add TAP Method";
-            this.buttonAddTapMethod.UseVisualStyleBackColor = true;
-            this.buttonAddTapMethod.Click += new System.EventHandler(this.buttonAddTapMethod_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 13F);
@@ -374,9 +375,9 @@
         private System.Windows.Forms.Button buttonRegisterFido2Passkey;
         private System.Windows.Forms.Button buttonSignOut;
         private System.Windows.Forms.Label labelSelectedUser;
-        private System.Windows.Forms.Button buttonFunctions;
         private System.Windows.Forms.Button buttonRevokeSessions;
         private System.Windows.Forms.Button buttonAddTapMethod;
+        private System.Windows.Forms.Button buttonFunctions;
     }
 }
 
