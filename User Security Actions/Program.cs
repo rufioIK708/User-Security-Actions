@@ -56,18 +56,24 @@ namespace User_Security_Actions
         // - variables used to store data for later lookup/use
         //public static string upn;
 
-        
+        // - - token and graph client 
         public static InteractiveBrowserCredential token;
         public static GraphServiceClient graphClient; 
+        // - - string to read input from users
         public static string input;
+
+        // - - bools to track the state of the app
         public static bool signedIn = false;
         public static bool validUser = false;
+        // - - - might be needed to cleaner password reset alternative in the future
         public static bool existPhoneMethods = false;
-        
+        // - - users to store the user and admin details
         public static Microsoft.Graph.Beta.Models.User user;
         public static Microsoft.Graph.Beta.Models.User admin;
+        // enumerators for phone method storage when we create them.  
         public static PhoneOption phoneOptions;
         public static MethodType methodType;
+        // - - - TAP method details
         public static DateTime tapStart;
         public static int tapDurationInMinutes;
         public static bool tapReusable;

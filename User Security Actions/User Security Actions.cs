@@ -1053,22 +1053,39 @@ namespace User_Security_Actions
 
         private void buttonSignOut_Click(object sender, EventArgs e)
         {
+
+            /* - the list of static variables to use as reference for what needs to be cleared.
+             *         public static InteractiveBrowserCredential token;
+             *         public static GraphServiceClient graphClient; 
+             *         // - - string to read input from users
+             *         public static string input;
+
+             *         // - - bools to track the state of the app
+             *         public static bool signedIn = false;
+             *         public static bool validUser = false;
+             *         // - - - might be needed to cleaner password reset alternative in the future
+             *         public static bool existPhoneMethods = false;
+                        // - - users to store the user and admin details
+                        public static Microsoft.Graph.Beta.Models.User user;
+                        public static Microsoft.Graph.Beta.Models.User admin;
+                        // enumerators for phone method storage when we create them.  
+                        public static PhoneOption phoneOptions;
+                        public static MethodType methodType;
+                        // - - - TAP method details
+                        public static DateTime tapStart;
+                        public static int tapDurationInMinutes;
+                        public static bool tapReusable;
+            */
             //Program.graphClient.
+            Program.token = null;
+            Program.graphClient = null;
+            Program.input = null;
             Program.signedIn = false;
             Program.validUser = false;
-
-
-            /*
-             * 
-            */
-
-            Program.input = null;
             Program.existPhoneMethods = false;
-            Program.graphClient = null;
             Program.user = null;
-            Program.token = null;
-            
             Program.admin = null;
+            
             Form1_Load(sender, e);
         }
 
