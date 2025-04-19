@@ -126,21 +126,51 @@ namespace User_Security_Actions
             //make some space
             modifyRichTextBox("\n");
 
-            //confirm values queried are not null
+            //confirm values queried are not null before printing, print NULL if they are
+            //DisplayName
+            modifyRichTextBox("\nDisplayName:            ");
             if (null != user.DisplayName)
-                modifyRichTextBox("\nDisplayName:            " + user.DisplayName);
+                modifyRichTextBox(user.DisplayName);
+            else
+                modifyRichTextBox("NULL");
+            //UserPrincipalName
+            modifyRichTextBox("\nUserPrincipalName:      ");
             if (null != user.UserPrincipalName)
-                modifyRichTextBox("\nUserPrincipalName:      " + user.UserPrincipalName);
+                modifyRichTextBox(user.UserPrincipalName);
+            else
+                modifyRichTextBox("NULL");
+            //UserID
+            modifyRichTextBox("\nUserID:                 ");
             if (null != user.Id)
-                modifyRichTextBox("\nObjectId:               " + user.Id);
+                modifyRichTextBox(user.Id);
+            else
+                modifyRichTextBox("NULL");
+            //Account Enabled
+            modifyRichTextBox("\nAccountEnabled:         ");
             if (null != user.AccountEnabled)
-                modifyRichTextBox("\nAccount enabled:        " + user.AccountEnabled);
+                modifyRichTextBox(user.AccountEnabled.ToString());
+            else
+                modifyRichTextBox("NULL");
+            //OnPremises Immutable ID
+            modifyRichTextBox("\nOnPremisesImmutableId:  ");
             if (null != user.OnPremisesImmutableId)
-                modifyRichTextBox("\nOnPremisesImmutableId:  " + user.OnPremisesImmutableId);
+                modifyRichTextBox(user.OnPremisesImmutableId);
+            else
+                modifyRichTextBox("NULL");
+            //Password Policies
+            modifyRichTextBox("\nPasswordPolicies:       ");
             if (null != user.PasswordPolicies)
-                modifyRichTextBox("\nPasswordPolicies:       " + user.PasswordPolicies);
+                modifyRichTextBox(  user.PasswordPolicies);
+            else
+                modifyRichTextBox("NULL");
+            //Refresh Tokens Valid From Date Time
+            modifyRichTextBox("\nRefreshTokensValidFrom: ");
             if (null != user.RefreshTokensValidFromDateTime)
-                modifyRichTextBox("\nRefreshTokensValidFrom: " + user.RefreshTokensValidFromDateTime);
+                modifyRichTextBox(user.RefreshTokensValidFromDateTime.ToString());
+            else
+                modifyRichTextBox("NULL");
+
+
 
         }
 

@@ -220,7 +220,7 @@
             this.buttonAddMethod.Name = "buttonAddMethod";
             this.buttonAddMethod.Size = new System.Drawing.Size(263, 41);
             this.buttonAddMethod.TabIndex = 5;
-            this.buttonAddMethod.Text = "Add a Method";
+            this.buttonAddMethod.Text = "Add a Security Method";
             this.buttonAddMethod.UseVisualStyleBackColor = true;
             this.buttonAddMethod.Visible = false;
             this.buttonAddMethod.Click += new System.EventHandler(this.buttonAddMethod_Click);
@@ -233,7 +233,7 @@
             this.getUserMFA.Name = "getUserMFA";
             this.getUserMFA.Size = new System.Drawing.Size(263, 41);
             this.getUserMFA.TabIndex = 1;
-            this.getUserMFA.Text = "Get User Auth Methods";
+            this.getUserMFA.Text = "Get User Security Methods";
             this.getUserMFA.UseVisualStyleBackColor = true;
             this.getUserMFA.Visible = false;
             this.getUserMFA.Click += new System.EventHandler(this.getUserMFA_Click);
@@ -272,7 +272,7 @@
             this.buttonRemoveMethod.Name = "buttonRemoveMethod";
             this.buttonRemoveMethod.Size = new System.Drawing.Size(266, 41);
             this.buttonRemoveMethod.TabIndex = 7;
-            this.buttonRemoveMethod.Text = "Remove a Method";
+            this.buttonRemoveMethod.Text = "Remove a Security Method";
             this.buttonRemoveMethod.UseVisualStyleBackColor = true;
             this.buttonRemoveMethod.Visible = false;
             this.buttonRemoveMethod.Click += new System.EventHandler(this.buttonRemoveMethod_Click);
