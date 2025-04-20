@@ -45,8 +45,8 @@
             this.buttonRemoveMethod = new System.Windows.Forms.Button();
             this.updateImmutableId = new System.Windows.Forms.Button();
             this.buttonSignOut = new System.Windows.Forms.Button();
-            this.displayBox = new System.Windows.Forms.RichTextBox();
             this.buttonFunctions = new System.Windows.Forms.Button();
+            this.displayBox = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -147,7 +147,6 @@
             this.buttonAddTapMethod.TabIndex = 10;
             this.buttonAddTapMethod.Text = "Add TAP Method";
             this.buttonAddTapMethod.UseVisualStyleBackColor = true;
-            this.buttonAddTapMethod.Visible = false;
             this.buttonAddTapMethod.Click += new System.EventHandler(this.buttonAddTapMethod_Click);
             // 
             // buttonRevokeSessions
@@ -302,6 +301,19 @@
             this.buttonSignOut.UseVisualStyleBackColor = true;
             this.buttonSignOut.Click += new System.EventHandler(this.buttonSignOut_Click);
             // 
+            // buttonFunctions
+            // 
+            this.buttonFunctions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonFunctions.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonFunctions.Location = new System.Drawing.Point(541, 3);
+            this.buttonFunctions.Name = "buttonFunctions";
+            this.buttonFunctions.Size = new System.Drawing.Size(263, 41);
+            this.buttonFunctions.TabIndex = 14;
+            this.buttonFunctions.Text = "Test functions";
+            this.buttonFunctions.UseVisualStyleBackColor = true;
+            this.buttonFunctions.Visible = false;
+            this.buttonFunctions.Click += new System.EventHandler(this.buttonFunctions_Click);
+            // 
             // displayBox
             // 
             this.displayBox.BackColor = System.Drawing.Color.Black;
@@ -316,19 +328,6 @@
             this.displayBox.Size = new System.Drawing.Size(1079, 373);
             this.displayBox.TabIndex = 2;
             this.displayBox.Text = "Just for reference";
-            // 
-            // buttonFunctions
-            // 
-            this.buttonFunctions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonFunctions.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonFunctions.Location = new System.Drawing.Point(541, 3);
-            this.buttonFunctions.Name = "buttonFunctions";
-            this.buttonFunctions.Size = new System.Drawing.Size(263, 41);
-            this.buttonFunctions.TabIndex = 14;
-            this.buttonFunctions.Text = "Test functions";
-            this.buttonFunctions.UseVisualStyleBackColor = true;
-            this.buttonFunctions.Visible = false;
-            this.buttonFunctions.Click += new System.EventHandler(this.buttonFunctions_Click);
             // 
             // Form1
             // 
