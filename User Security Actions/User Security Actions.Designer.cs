@@ -147,6 +147,7 @@
             this.buttonAddTapMethod.TabIndex = 10;
             this.buttonAddTapMethod.Text = "Add TAP Method";
             this.buttonAddTapMethod.UseVisualStyleBackColor = true;
+            this.buttonAddTapMethod.Visible = false;
             this.buttonAddTapMethod.Click += new System.EventHandler(this.buttonAddTapMethod_Click);
             // 
             // buttonRevokeSessions

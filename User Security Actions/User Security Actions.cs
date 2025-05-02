@@ -74,6 +74,8 @@ namespace User_Security_Actions
                     buttonRemoveMethod.Enabled = true;
                     buttonRevokeSessions.Show();
                     buttonRevokeSessions.Enabled = true;
+                    buttonAddTapMethod.Show();
+                    buttonAddTapMethod.Enabled = true;
 
                     //specific button text based on account status
                     bool? enabled = Program.user.AccountEnabled;
@@ -106,6 +108,8 @@ namespace User_Security_Actions
                     buttonRemoveMethod.Enabled = false;
                     buttonRevokeSessions.Hide();
                     buttonRevokeSessions.Enabled = false;
+                    buttonAddTapMethod.Hide();
+                    buttonAddTapMethod.Enabled = false;
                 }
             }
             else
