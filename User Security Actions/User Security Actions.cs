@@ -205,6 +205,7 @@ namespace User_Security_Actions
         public void modifyRichTextBox(string message)
         {
             displayBox.AppendText(message);
+            displayBox.ScrollToCaret();
         }
 
         public async void printMFAData(List<MFAData> list)
@@ -327,6 +328,7 @@ namespace User_Security_Actions
         public async Task<List<MFAData>> getAndPrintMFA(bool print)
         {
             
+            Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
             if (await MFAExtras.isTenantPremium())
             {
@@ -372,6 +374,9 @@ namespace User_Security_Actions
             if (null != methods && print)
                 printMFAData(methods);
 
+            Form1.ActiveForm.Cursor = Cursors.Default;
+
+            //return the list of methods
             return methods;
         }
 
