@@ -35,7 +35,7 @@ namespace User_Security_Actions
             InitializeComponent();
         }
 
-        private  void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
             /* attempting to change the form based on the sign-in state, not working as expected*/
             if (Program.signedIn)
@@ -253,7 +253,8 @@ namespace User_Security_Actions
                             {
                                 modifyRichTextBox("\nError getting phone method. Please try again.\n"
                                     + "\n" + err.Message);
-                            }break;
+                            }
+                            break;
 
                         case Program.passwordAuthMethod:
                             modifyRichTextBox($"Type of Method : Password\n");
@@ -334,7 +335,6 @@ namespace User_Security_Actions
             {
                 try
                 {
-               
                     //to verify the raw output
                     modifyRichTextBox("\n" + await MFAExtras.getRegistrationAuthData());
                 }
@@ -344,7 +344,7 @@ namespace User_Security_Actions
                 }
             }
 
-            
+
 
             //get the MFA methods for the user
             var response = await MFAExtras.getUserMfaMethods();
@@ -544,7 +544,7 @@ namespace User_Security_Actions
 
 
                 }
-                    
+
 
                 if (successful)
                 {
@@ -742,7 +742,8 @@ namespace User_Security_Actions
             //isolate the password method
             MFAData passwordMethod = new MFAData();
 
-            foreach (MFAData authenticationMethod in methods) {
+            foreach (MFAData authenticationMethod in methods)
+            {
                 if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
                 {
                     passwordMethod = authenticationMethod;
@@ -779,7 +780,7 @@ namespace User_Security_Actions
                     {
                         MessageBox.Show(err.Error + "\nError resetting password: try again");
                     }
-                   
+
                     break;
                 case (""):
                     MessageBox.Show("No password entered. Please try again.");
@@ -940,7 +941,7 @@ namespace User_Security_Actions
             ///////////////////////////////////////////////////
             //// resetting via traditional authenticaiton endpoint
             ///////////////////////////////////////////////////
-            
+
             /****** its not working
             try
             {
@@ -963,7 +964,7 @@ namespace User_Security_Actions
             ///////////////////////////////////////////////////
 
             //gather all methods, then remove only the MFA ones (exclude password, email, and security questions.)
-            
+
             //get all the methods and store
             var response = await getAndPrintMFA(true);
             string defaultMethod = "";
@@ -987,21 +988,21 @@ namespace User_Security_Actions
                 for (int x = 0; x < 3; x++)
                 {
                     for (int i = 0; i < response.Count; i++)
-                    //if the method is not a password, email, or security question, remove it.
-                    if (response[i].OdataType != Program.passwordAuthMethod &&
-                        response[i].OdataType != Program.emailAuthMethod &&
-                        response[i].OdataType != Program.appPasswordAuthMethod)
-                    {
-                        try
+                        //if the method is not a password, email, or security question, remove it.
+                        if (response[i].OdataType != Program.passwordAuthMethod &&
+                            response[i].OdataType != Program.emailAuthMethod &&
+                            response[i].OdataType != Program.appPasswordAuthMethod)
                         {
-                            await deleteMethod(response[i].Id);
-                        }
-                        catch (ODataError err)
-                        {
+                            try
+                            {
+                                await deleteMethod(response[i].Id);
+                            }
+                            catch (ODataError err)
+                            {
                                 //do nothing as exceptions are expected.
+                            }
+
                         }
-                            
-                    }
                 }
                 /******
                 ///// the more complicated method
@@ -1055,7 +1056,7 @@ namespace User_Security_Actions
             }
 
             if (successful)
-            {                 
+            {
                 //get the updated user
                 Program.user = await getUser(Program.user.UserPrincipalName);
                 printUserStatus(Program.user);
@@ -1120,7 +1121,7 @@ namespace User_Security_Actions
             Program.existPhoneMethods = false;
             Program.user = null;
             Program.admin = null;
-            
+
             Form1_Load(sender, e);
         }
 
@@ -1129,7 +1130,7 @@ namespace User_Security_Actions
             var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
             modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
             modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
-            if(null != response.OdataType)
+            if (null != response.OdataType)
                 modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
 
             var options = new JsonSerializerOptions { WriteIndented = true };
@@ -1192,7 +1193,7 @@ namespace User_Security_Actions
                 {
                     modifyRichTextBox("\nTAP method is enabled.");
                     modifyRichTextBox("\n" + jsonString);
-                    foreach ( var item in test.Result.AuthenticationMethodConfigurations)
+                    foreach (var item in test.Result.AuthenticationMethodConfigurations)
                     {
                         var jsonOut = JsonSerializer.Serialize(item.AdditionalData, options);
                         modifyRichTextBox($"\n{jsonOut}");
@@ -1216,7 +1217,7 @@ namespace User_Security_Actions
             //4. Generate the request from the input
             //5. Submit the request
             //6. Display the result
-        
+
         }
     }
 }

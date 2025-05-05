@@ -200,7 +200,8 @@ namespace User_Security_Actions
 
             //serialize result
             var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString2 = "";
+            //string jsonString;
+            string advDetails = "";
             bool successful = await isTenantPremium();
 
             //confirm the licnese requirement is fulfilled
@@ -211,14 +212,31 @@ namespace User_Security_Actions
                 try
                 {
                     result = await Program.graphClient.Reports.AuthenticationMethods.UserRegistrationDetails[Program.user.Id].GetAsync();
-                    jsonString2 = JsonSerializer.Serialize(result, options);
+                    //jsonString = JsonSerializer.Serialize(result, options);
+                    //advDetails = jsonString;
                 }
                 catch (ODataError e)
                 {
                     MessageBox.Show("Error! getting MFA data: " + e);
                 }
 
-                return jsonString2;
+                advDetails += $"\n"
+                    + $"\nUser is an admin in Entra ID:            {result.IsAdmin}"
+                    + $"\nUser is MFA registered:                  {result.IsMfaRegistered}"
+                    + $"\nUser is MFA capable:                     {result.IsMfaCapable}"
+                    + $"\nUser is SSPR registered:                 {result.IsSsprRegistered}"
+                    + $"\nUser is SSPR enabled:                    {result.IsSsprEnabled}"
+                    + $"\nUser is SSPR capable:                    {result.IsSsprCapable}"
+                    + $"\nUser is passwordless capable:            {result.IsPasswordlessCapable}"
+                    + $"\nEntra preferred method enabled:          {result.IsSystemPreferredAuthenticationMethodEnabled}";
+                if (true == result.IsSystemPreferredAuthenticationMethodEnabled)
+                    advDetails += $"\nEntra preferred method:                  {result.SystemPreferredAuthenticationMethods.FirstOrDefault()}";
+
+                advDetails += 
+                      $"\nUser preferred method of Secondary Auth: {result.UserPreferredMethodForSecondaryAuthentication}"
+                    + "\n"
+                    + "\n";
+                return advDetails;
             }
             else
                 return "empty";
