@@ -53,11 +53,12 @@
             // labellabelStartDateTime
             // 
             this.labellabelStartDateTime.AutoSize = true;
-            this.labellabelStartDateTime.Location = new System.Drawing.Point(25, 63);
+            this.labellabelStartDateTime.Location = new System.Drawing.Point(26, 51);
             this.labellabelStartDateTime.Name = "labellabelStartDateTime";
-            this.labellabelStartDateTime.Size = new System.Drawing.Size(190, 13);
+            this.labellabelStartDateTime.Size = new System.Drawing.Size(205, 26);
             this.labellabelStartDateTime.TabIndex = 1;
-            this.labellabelStartDateTime.Text = "Please select the start time for the TAP";
+            this.labellabelStartDateTime.Text = "Please select the start time for the TAP\r\nRecommend selecting 7+ hours from now.\r" +
+    "\n";
             // 
             // labelDuration
             // 

@@ -40,13 +40,15 @@ namespace User_Security_Actions
             //4. Generate the request from the input
             var requestBody = new TemporaryAccessPassAuthenticationMethod
             {
-                StartDateTime = tapStartDate.Add(tapStartTime),
+                StartDateTime = tapStartDate.Add(tapStartTime).ToUniversalTime(),
                 LifetimeInMinutes = Program.tapDurationInMinutes,
                 IsUsableOnce = Program.tapReusable,
             };
             //5. Submit the request
             TemporaryAccessPassAuthenticationMethod tapResult = new();
 
+            //5.a - check the start date/time of the TAP request
+            MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
             try
             {
                 tapResult = await Program.graphClient.Users[Program.user.Id]
@@ -67,5 +69,7 @@ namespace User_Security_Actions
                         "TAP Creation Result", tapResult.TemporaryAccessPass).ShowDialog();
 
         }
+
+
     }
 }
