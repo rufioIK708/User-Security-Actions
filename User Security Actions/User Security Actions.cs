@@ -1090,7 +1090,10 @@ namespace User_Security_Actions
             Program.existPhoneMethods = false;
             Program.user = null;
             Program.admin = null;
+            displayBox.Clear();
+            modifyRichTextBox("Just for reference");
             
+
             Form1_Load(sender, e);
         }
 

@@ -48,7 +48,7 @@ namespace User_Security_Actions
             TemporaryAccessPassAuthenticationMethod tapResult = new();
 
             //5.a - check the start date/time of the TAP request
-            MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
+            //MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
             try
             {
                 tapResult = await Program.graphClient.Users[Program.user.Id]
