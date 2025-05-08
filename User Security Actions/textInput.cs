@@ -65,48 +65,55 @@ namespace User_Security_Actions
         {
             //clear text first, this ensures we don't get stuck with previous input.
             Program.input = "";
-            //get the input  string
-            Program.input = input1.Text;
 
-
-            //if the this is not for MFA, ignor the other buttons
-            if (!splitContainer1.Visible)
+            //check the length to make sure there's anything added
+            if (input1.Text.Length > 0)
             {
-                this.Close();
-                return;
-            }
-            //if the user is using the MFA form, we need to store the method details
-            else if (radioButtonPhoneMethod.Checked)
-            {
-                //not used now, but could be later, mostly included for completeness
-                Program.methodType = MethodType.Phone;
+                //get the input  string
+                Program.input = input1.Text;
 
-                //store the state of method selected.
-                if (radioButtonMobile.Checked)
-                    Program.phoneOptions = PhoneOption.Mobile;
-                else if (radioButtonOffice.Checked)
-                    Program.phoneOptions = PhoneOption.Office;
-                else if (radioButtonAltMobile.Checked)
-                    Program.phoneOptions = PhoneOption.AlternateMobile;
-                else
+
+                //if the this is not for MFA, ignor the other buttons
+                if (!splitContainer1.Visible)
                 {
-                    MessageBox.Show("Please select a phone method type.");
+                    this.Close();
                     return;
                 }
-            }
-            else if (radioButtonEmailMethod.Checked)
-            {
-                Program.methodType = MethodType.Email;
+                //if the user is using the MFA form, we need to store the method details
+                else if (radioButtonPhoneMethod.Checked)
+                {
+                    //not used now, but could be later, mostly included for completeness
+                    Program.methodType = MethodType.Phone;
+
+                    //store the state of method selected.
+                    if (radioButtonMobile.Checked)
+                        Program.phoneOptions = PhoneOption.Mobile;
+                    else if (radioButtonOffice.Checked)
+                        Program.phoneOptions = PhoneOption.Office;
+                    else if (radioButtonAltMobile.Checked)
+                        Program.phoneOptions = PhoneOption.AlternateMobile;
+                    else
+                    {
+                        MessageBox.Show("Please select a phone method type.");
+                        return;
+                    }
+                }
+                else if (radioButtonEmailMethod.Checked)
+                {
+                    Program.methodType = MethodType.Email;
+                }
+                else
+                {
+                    MessageBox.Show("Please select a method type.");
+                }
+
+
+                //close the form
+                this.Close();
             }
             else
-            {
-                MessageBox.Show("Please select a method type.");
-                return;
-            }
+                MessageBox.Show("Please enter something or hit Cancel");
 
-
-            //close the form
-            this.Close();
         }
             
         
@@ -115,7 +122,7 @@ namespace User_Security_Actions
         {
             //show and modify the label
             labelMethodMessage.Show();
-            labelMethodMessage.Text = "Please enter the phone number as +1 1234567890";
+            labelMethodMessage.Text = "Please enter the number as +1 1234567890";
             
             //show the rest of the buttons
             radioButtonOffice.Show();
@@ -139,6 +146,12 @@ namespace User_Security_Actions
 
             //reload the form
             textInput_Load(sender, e);
+        }
+
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            Program.cancelled = true;
+            this.Close();
         }
     }
 }

@@ -20,6 +20,7 @@ using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOption
 using User_Security_Actions;
 using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
 using Microsoft.Kiota.Abstractions;
+using System.Diagnostics.Eventing.Reader;
 
 
 namespace User_Security_Actions
@@ -619,57 +620,69 @@ namespace User_Security_Actions
             bool result = false;
             new textInput("Please enter the ObjectID/UPN of a user", "Select a User", false).ShowDialog();
 
-            //try to get the user
-            try
+            //copy input to new var
+            var input = Program.input;
+            Program.input = null;
+
+            if (!Program.cancelled)
             {
-                Program.user = await getUser(Program.input);
+                //try to get the user
+                try
+                {
+                    Program.user = await getUser(input);
 
+                }
+                catch (ODataError err)
+                {
+                    MessageBox.Show(err.Error + "\nError getting user: try again"
+                        + "\nResult is: " + result.ToString());
+                    result = false;
+                    //throw err;
+
+                }
+
+                //if UPN is not null, we successfully got a user
+                if (null != Program.user.UserPrincipalName)
+                    result = true;
+
+                /**********************
+                 * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
+                 * However, when calling Graph API, you are able to perform these actions on yourself.
+                 * This check is not neccessary, we'll let the API let us know when we are doing something we
+                 * shouldn't be, for now.
+
+                if (Program.admin.Id == Program.user.Id)
+                {
+                    MessageBox.Show("This app is intended to make administrator changes." +
+                        "\nYou cannot make admnistrator changes on your own account." +
+                        "\nPlease select a different user");
+                    result = false;
+                }
+                *******************************/
+
+                //if user was found successfully
+                if (result)
+                {
+                    modifyRichTextBox("\n\nUser found: ");
+                    printUserStatus(Program.user);
+                    //getAndPrintMFA(app, upn);
+                    labelSelectedUser.Text = "The selected user is: " + Program.user.DisplayName;
+                }
+                //user was not found successfully
+                else
+                    modifyRichTextBox("\n\nUser not found!");
+
+                //update environment var with user status
+                Program.validUser = result;
+
+                //refresh the form
+                Form1_Load(sender, e);
             }
-            catch (ODataError err)
-            {
-                MessageBox.Show(err.Error + "\nError getting user: try again"
-                    + "\nResult is: " + result.ToString());
-                result = false;
-                //throw err;
-
-            }
-
-            //if UPN is not null, we successfully got a user
-            if (null != Program.user.UserPrincipalName)
-                result = true;
-
-            /**********************
-             * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
-             * However, when calling Graph API, you are able to perform these actions on yourself.
-             * This check is not neccessary, we'll let the API let us know when we are doing something we
-             * shouldn't be, for now.
-             
-            if (Program.admin.Id == Program.user.Id)
-            {
-                MessageBox.Show("This app is intended to make administrator changes." +
-                    "\nYou cannot make admnistrator changes on your own account." +
-                    "\nPlease select a different user");
-                result = false;
-            }
-            *******************************/
-
-            //if user was found successfully
-            if (result)
-            {
-                modifyRichTextBox("\n\nUser found: ");
-                printUserStatus(Program.user);
-                //getAndPrintMFA(app, upn);
-                labelSelectedUser.Text = "The selected user is: " + Program.user.DisplayName;
-            }
-            //user was not found successfully
             else
-                modifyRichTextBox("\n\nUser not found!");
-
-            //update environment var with user status
-            Program.validUser = result;
-
-            //refresh the form
-            Form1_Load(sender, e);
+            {
+                //reset cancelled state
+                Program.cancelled = false;
+            }
         }
 
         private async void updateImmutableId_Click(object sender, EventArgs e)
@@ -758,8 +771,12 @@ namespace User_Security_Actions
             string resetMessage = "\nThe user will have to use this \npassword to reset their password on \nnext login.";
             new textInput(labelMessage, "Reset Password", false).ShowDialog();
 
+            string input = Program.input.Trim();
+            Program.input = null;
+            input = input.ToUpper();
+
             //verify the input & act: reset the password or no action
-            switch (Program.input.ToUpper())
+            switch (input)
             {
                 case ("CANCEL"):
                     break;
@@ -837,99 +854,109 @@ namespace User_Security_Actions
             string labelMessage = "Please select Phone or Email.";
             new textInput(labelMessage, "Add Authentication Method", true).ShowDialog();
 
-            //trim the input
-            string input = Program.input.Trim();
-
-            //check if email method and add.
-            if (Program.methodType == MethodType.Email)
+            //check if the user cancelled
+            if (!Program.cancelled)
             {
-                var requestBody = new EmailAuthenticationMethod
+                //trim the input
+                string input = Program.input.Trim();
+
+                //check if email method and add.
+                if (Program.methodType == MethodType.Email)
                 {
-                    EmailAddress = input,
-                };
-                try
-                {
-                    var result = await Program.graphClient.Users[Program.user.Id].
-                        Authentication.EmailMethods.PostAsync(requestBody);
-                    MessageBox.Show("Email method saved.\nMethod ID: " + result.Id);
+                    var requestBody = new EmailAuthenticationMethod
+                    {
+                        EmailAddress = input,
+                    };
+                    try
+                    {
+                        var result = await Program.graphClient.Users[Program.user.Id].
+                            Authentication.EmailMethods.PostAsync(requestBody);
+                        MessageBox.Show("Email method saved.\nMethod ID: " + result.Id);
+                    }
+                    catch (Exception err)
+                    {
+                        MessageBox.Show("Error adding phone method. Please try again."
+                            + "\nError Message: " + err.Message);
+                    }
                 }
-                catch (Exception err)
+                else
                 {
-                    MessageBox.Show("Error adding phone method. Please try again."
-                        + "\nError Message: " + err.Message);
+                    switch (Program.phoneOptions)
+                    {
+                        case PhoneOption.Mobile:
+                            //add the phone method
+                            var requestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.Mobile,
+                            };
+
+                            //submit add request
+                            try
+                            {
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(requestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding phone method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+
+                        case PhoneOption.AlternateMobile:
+                            //add the alternate mobile method
+                            var altRequestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.AlternateMobile,
+                            };
+                            //submit add request
+                            try
+                            {
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(altRequestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding alternate mobile method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+
+                        case PhoneOption.Office:
+                            //add the office method
+                            var officeRequestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.Office,
+                            };
+                            //submit add request
+                            try
+                            {
+
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(officeRequestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding office method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+                    }
                 }
             }
             else
             {
-                switch (Program.phoneOptions)
-                {
-                    case PhoneOption.Mobile:
-                        //add the phone method
-                        var requestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.Mobile,
-                        };
-
-                        //submit add request
-                        try
-                        {
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(requestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding phone method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-
-                    case PhoneOption.AlternateMobile:
-                        //add the alternate mobile method
-                        var altRequestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.AlternateMobile,
-                        };
-                        //submit add request
-                        try
-                        {
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(altRequestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding alternate mobile method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-
-                    case PhoneOption.Office:
-                        //add the office method
-                        var officeRequestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.Office,
-                        };
-                        //submit add request
-                        try
-                        {
-
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(officeRequestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding office method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-                }
+                //reset cancelled state
+                Program.cancelled = false;
             }
         }
+       
 
         private async void buttonResetMFA_Click(object sender, EventArgs e)
         {

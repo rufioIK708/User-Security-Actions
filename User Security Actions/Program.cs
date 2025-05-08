@@ -65,6 +65,7 @@ namespace User_Security_Actions
         // - - bools to track the state of the app
         public static bool signedIn = false;
         public static bool validUser = false;
+        public static bool cancelled = false;
         // - - - might be needed to cleaner password reset alternative in the future
         public static bool existPhoneMethods = false;
         // - - users to store the user and admin details
