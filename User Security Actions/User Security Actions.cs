@@ -467,7 +467,7 @@ namespace User_Security_Actions
                             MessageBox.Show("You cannot delete passwords at this time.");
                             break;
                         //MS Authenticator app method
-                        case "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod":
+                        case Program.mSAuthenticatorAuthMethod:
                             try
                             {
                                 await Program.graphClient.Users[Program.user.Id].Authentication.
@@ -997,6 +997,7 @@ namespace User_Security_Actions
             string defaultMethod = "";
             string[] phoneMethods = { };
             int count = 0;
+            
 
             //make sure the output isnt null (it should never be as everyone should always have
             //at least a password)
@@ -1027,6 +1028,7 @@ namespace User_Security_Actions
                             catch (ODataError err)
                             {
                                 //do nothing as exceptions are expected.
+                                MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
                             }
 
                         }
