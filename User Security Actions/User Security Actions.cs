@@ -1028,7 +1028,7 @@ namespace User_Security_Actions
                             catch (ODataError err)
                             {
                                 //do nothing as exceptions are expected.
-                                MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
+                                //MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
                             }
 
                         }

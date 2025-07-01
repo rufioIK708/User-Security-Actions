@@ -202,12 +202,10 @@ namespace User_Security_Actions
             var options = new JsonSerializerOptions { WriteIndented = true };
             //string jsonString;
             string advDetails = "";
-            bool successful = await isTenantPremium();
+            bool premium = await isTenantPremium();
 
             //confirm the licnese requirement is fulfilled
-            
-
-            if (successful)
+            if (premium)
             {
                 try
                 {
@@ -229,6 +227,8 @@ namespace User_Security_Actions
                     + $"\nUser is SSPR capable:                    {result.IsSsprCapable}"
                     + $"\nUser is passwordless capable:            {result.IsPasswordlessCapable}"
                     + $"\nEntra preferred method enabled:          {result.IsSystemPreferredAuthenticationMethodEnabled}";
+
+                //add the next line (system preferred method) only if the tenant has a system preferred method
                 if (true == result.IsSystemPreferredAuthenticationMethodEnabled)
                     advDetails += $"\nEntra preferred method:                  {result.SystemPreferredAuthenticationMethods.FirstOrDefault()}";
 
@@ -251,6 +251,7 @@ namespace User_Security_Actions
             {
                 var response = await Program.graphClient.Organization.GetAsync();
                 var orgDetails = JsonSerializer.Serialize(response, options);
+                
                 if (orgDetails.Contains("AADPremium"))
                 {
                     successful = true;
