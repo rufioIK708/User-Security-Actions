@@ -329,23 +329,64 @@ namespace User_Security_Actions
         //method to get and print the authetication methods for a user
         public async Task<List<MFAData>> getAndPrintMFA(bool print)
         {
-            
+            string result;
+
             Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
+            //does the tenant have a premium (P1/2) license?
             if (await MFAExtras.isTenantPremium())
             {
                 try
                 {
-                    //to verify the raw output
-                    modifyRichTextBox("\n" + await MFAExtras.getRegistrationAuthData());
+                    //get the registration auth data for the user
+                    modifyRichTextBox("\n\nGetting advanced MFA details for user: " + Program.user.DisplayName + "\n");
+
+                    result = await MFAExtras.getRegistrationAuthData();
+                    modifyRichTextBox("\n" + result);
                 }
                 catch (ODataError err)
                 {
                     MessageBox.Show(err.Message + "\nError getting advancded MFA details: confirm P1 license");
                 }
             }
+            else
+            {
+                //the tenant does not have a premium license, notify the user
+                modifyRichTextBox("\n\nThis tenant does not have a Premium P1 license.\n" +
+                    "Some advanced MFA features are not available.\n");
+
+                try
+                {
+                    var signInPreferences = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
 
 
+                    //attempting to clean up the response and disply it
+                    //display isSystemPreferredAuthenticationMethodEnabled state
+                    modifyRichTextBox("Is SystemPreferredAuthenticaitonMethod Enabled: " +
+                        signInPreferences.IsSystemPreferredAuthenticationMethodEnabled.ToString() + "\n");
+
+                    //display systemPreferredAuthenticationMethod value
+                    modifyRichTextBox("SystemPreferredAuthenticationMethod: ");
+                    //systemPreferredAuthenticationMethod is always the last key in AdditionalData.
+                    //Need to check if the value is null and disply accordingly
+                    if ( null != signInPreferences.AdditionalData.Last().Value )
+                       modifyRichTextBox(signInPreferences.AdditionalData.Last().Value.ToString() + "\n");
+                    else
+                        modifyRichTextBox("NULL\n");
+
+                    //display userPreferredAuthenticationMethod value
+                    modifyRichTextBox("UserPreferredAuthenticationMethod: ");
+                    //check if null and display accordingly
+                    if ( null != signInPreferences.UserPreferredMethodForSecondaryAuthentication ) 
+                        modifyRichTextBox(signInPreferences.UserPreferredMethodForSecondaryAuthentication.ToString() + "\n");
+                    else
+                        modifyRichTextBox("NULL\n");
+                }
+                catch (ODataError err)
+                {
+                    MessageBox.Show(err.Message + "\nError getting SignInPreferences");
+                }
+            }
 
             //get the MFA methods for the user
             var response = await MFAExtras.getUserMfaMethods();
@@ -353,7 +394,7 @@ namespace User_Security_Actions
             //serialize the response
             var options = new JsonSerializerOptions { WriteIndented = true };
             string jsonString = JsonSerializer.Serialize(response.Value, options);
-
+            
             //to verify the raw output
             //modifyRichTextBox("\n" + jsonString);
 

@@ -1,5 +1,4 @@
 ﻿using Azure.Identity;
-
 using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
 using Microsoft.Graph.Beta.Models.ODataErrors;
@@ -167,13 +166,6 @@ namespace User_Security_Actions
 #nullable disable
     public class MFAExtras()
     {
-        //to be able to call form1 properties
-        //private static Form1 formInstance;
-        
-
-        
-
-
         //get MFA methods for a user
         public static async Task<AuthenticationMethodCollectionResponse> getUserMfaMethods()
         {
@@ -198,10 +190,12 @@ namespace User_Security_Actions
 
             var result = new UserRegistrationDetails();
 
-            //serialize result
+            //serialize options
             var options = new JsonSerializerOptions { WriteIndented = true };
             //string jsonString;
             string advDetails = "";
+
+            //check if the tenant has a premium license.
             bool premium = await isTenantPremium();
 
             //confirm the licnese requirement is fulfilled
