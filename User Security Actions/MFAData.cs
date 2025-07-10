@@ -4,6 +4,7 @@ using Microsoft.Graph.Beta.Models;
 using Microsoft.Graph.Beta.Models.ODataErrors;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -23,6 +24,10 @@ namespace User_Security_Actions
         public Dictionary<string, object>? BackingStore { get; set; }
         public string? Id { get; set; }
         public string? OdataType { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? PhoneType { get; set; }
+        public string? SmsSignInState { get; set; }
+        public bool? isDefault { get; set; }
     }
 
     public record class RegData()
@@ -163,56 +168,326 @@ namespace User_Security_Actions
         public Dictionary<string, object>? includeTargets { get; set; }
     }
 
+    public static class MyExtensions
+    {
+        //adding is default property to the AuthenticationMethod class
+        public static bool isDefault(this AuthenticationMethod method, string defaultMethod)
+        {
+            bool isDefault = false;
+            //check if the method is null
+            if (method != null)
+            { 
+                switch (defaultMethod)
+                {
+                    case "Sms":
+                        if (method.OdataType == Program.phoneAuthMethod)
+                        {
+                            var phoneMethod = (PhoneAuthenticationMethod)method;
+                            if (phoneMethod.PhoneType.ToString() == "Mobile")
+                                isDefault = true;
+                        }
+                        break;
+                    case "VoiceOffice":
+                        if (method.OdataType == Program.phoneAuthMethod)
+                        {
+                            var phoneMethod = (PhoneAuthenticationMethod)method;
+                            if (phoneMethod.PhoneType.ToString() == "Office")
+                                isDefault = true;
+                        }
+                        break;
+                    case "VoiceMobile":
+                        if (method.OdataType == Program.phoneAuthMethod)
+                        {
+                            var phoneMethod = (PhoneAuthenticationMethod)method;
+                            if (phoneMethod.PhoneType.ToString() == "Mobile")
+                                isDefault = true;
+                        }
+                        break;
+                    case "VoiceAlternateMobile":
+                        if (method.OdataType == Program.phoneAuthMethod)
+                        {
+                            var phoneMethod = (PhoneAuthenticationMethod)method;
+                            if (phoneMethod.PhoneType.ToString() == "AlternateMobile")
+                                isDefault = true;
+                        }
+                        break;
+                    case "Push":
+                        if (method.OdataType == Program.mSAuthenticatorAuthMethod)
+                        {
+                            isDefault = true;
+                        }
+                        break;
+                    case "Fido2":
+                        if (method.OdataType == Program.fido2AuthMethod)
+                        {
+                            isDefault = true;
+                        }
+                        break;
+                    case "Oath":
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return isDefault;
+        }
+    }
+
 #nullable disable
     public class MFAExtras()
     {
         //get MFA methods for a user
-        public static async Task<AuthenticationMethodCollectionResponse> getUserMfaMethods()
+        public static async Task<List<AuthenticationMethod>> getUserMfaMethods()
         {
-            var response = new AuthenticationMethodCollectionResponse();
+            var result = new List<AuthenticationMethod>();
 
             try
             {
-                response = await Program.graphClient.Users[Program.user.Id].Authentication.Methods.GetAsync();
-                return response;
+                var response = await Program.graphClient.Users[Program.user.Id].Authentication.Methods.GetAsync();
+                result = response.Value;
             }
             catch (ODataError e)
             {
                 MessageBox.Show("Error! getting MFA methods: " + e);
             }
 
-            return response;
+            return result;
         }
 
-        //get MFA/SSPR registration details as well as others
-        public static async Task<string> getRegistrationAuthData()
+        public static void printMFAData(List<AuthenticationMethod> list, string defaultMethod)
         {
+            string output = "";
 
-            var result = new UserRegistrationDetails();
+            output +=Environment.NewLine;
 
-            //serialize options
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            //string jsonString;
+            //display the number of methods
+            output +=$"\nNumber of AuthMehtods:  {list.Count}";
+
+            //loop through the list of MFA methods
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (null != list[i].OdataType)
+                {
+                    //Replace the OdataType with a more readable string - find out which method we have and then
+                    //  determine if it matches with the method found in userPreferredMethodForSecondaryAuthentication.
+                    //  Not all methods will have a lavel. Options are Push, Oath, VoiceMobile, VoiceAlternametMobile,
+                    //  VoiceOffice, Sms, unknownFutureValure. Oath will not have a default value as any of multiple Oath
+                    //  methods can be used, just the Oath screen will be presented to the user.
+                    switch (list[i].OdataType)
+                    {
+                        case Program.platformCredMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var platformMethod = (PlatformCredentialAuthenticationMethod)list[i];
+
+                            //not an option as a default secondary method
+
+                            output += $"\nType of Method   : Platform Credential";
+                            output += $"\nDisplay Name     : {platformMethod.DisplayName}";
+                            output += $"\nPlatform Type    : {platformMethod.Platform}";
+                            output += $"\nKey Strength     : {platformMethod.KeyStrength}";
+                            break;
+
+                        case Program.wHFBAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var wfbMethod = (WindowsHelloForBusinessAuthenticationMethod)list[i];
+
+                            //not an option as a default secondary method
+
+                            output += $"\nType of Method   : Windows Hello for Business";
+                            output += $"\nDisplay Name     : {wfbMethod.DisplayName}";
+                            output += $"\nPlatform Type    : {wfbMethod.Device}";
+                            output += $"\nKey Strength     : {wfbMethod.KeyStrength}";
+                            break;
+
+                        case Program.tAPAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var tapMethod = (TemporaryAccessPassAuthenticationMethod)list[i];
+
+                            //not an option as a default secondary method
+
+                            output += $"\nType of Method   : Temporary Access Pass";
+                            output += $"\nStart Date       : {tapMethod.StartDateTime}";
+                            output += $"\nLifetime         : {tapMethod.LifetimeInMinutes}";
+                            output += $"\nReusable         : {tapMethod.IsUsableOnce}";
+                            output += $"\nTemp Access Pass : {tapMethod.TemporaryAccessPass}";
+                            break;
+
+                        case Program.softOathAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+
+                            //check for default method type. Able to be used for Oath
+                            if ("Oath" == defaultMethod)
+                                output += "\n\n **Usable as Default Method** ";
+
+                            var softOathMethod = (SoftwareOathAuthenticationMethod)list[i];
+                            output += $"\nType of Method  : Software Oath Token";
+                            output += $"\nDisplay Name    : {softOathMethod.SecretKey}";
+                            break;
+
+                        case Program.phoneAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var phoneMethod = (PhoneAuthenticationMethod)list[i];
+
+                            //check for default method type
+                            //  for phone method, Sms and VoiceMobile are for the primary mobile method.
+                            //  Office and AltMobile phones have their own voice categories, and cannot be used for SMS
+                            if (defaultMethod == "Sms" && phoneMethod.PhoneType.ToString() == "Mobile")
+                                output += "\n\n **Default Method** ";
+                            else if (defaultMethod == "VoiceOffice" && phoneMethod.PhoneType.ToString() == "Office")
+                                output += "\n\n **Default Method** ";
+                            else if (defaultMethod == "VoiceMobile" && phoneMethod.PhoneType.ToString() == "Mobile")
+                                output += "\n\n **Default Method** ";
+                            else if (defaultMethod == "VoiceAlternateMobile" && phoneMethod.PhoneType.ToString() == "AlternateMobile")
+                                output += "\n\n **Default Method** ";
+                             
+                            output += $"\nType of Method  : Phone Authentication";
+                            output += $"\nPhone number    : {phoneMethod.PhoneNumber}";
+                            output += $"\nPhone type      : {phoneMethod.PhoneType}";
+                            output += $"\nSMS SignInState : {phoneMethod.SmsSignInState}";
+                            break;
+
+                        case Program.passwordAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var passwordAuthMethod = (PasswordAuthenticationMethod)list[i];
+
+                            //not an option for secondary authentication
+
+                            output += $"\nType of Method  : Password";
+                            output += $"\nDisplay Name    : {passwordAuthMethod.Password}";
+                            break;
+
+                        case Program.mSAuthenticatorAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var mSAuthenticatorMethod = (MicrosoftAuthenticatorAuthenticationMethod)list[i];
+
+                            //check for default method type.
+                            if ("Push" == defaultMethod)
+                                output += "\n\n **Useable as Default Method** ";
+
+                            output += $"\nType of Method  : Microsoft Authenticator";
+                            output += $"\nDisplay Name    : {mSAuthenticatorMethod.DisplayName}";
+                            output += $"\nDevice Tag      : {mSAuthenticatorMethod.DeviceTag}";
+                            output += $"\nDevice          : {mSAuthenticatorMethod.Device}";
+                            output += $"\nApp Version     : {mSAuthenticatorMethod.PhoneAppVersion}";
+                            break;
+
+                        case Program.hardOathAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var hardOathAuthMethod = (HardwareOathAuthenticationMethod)list[i];
+
+                            //check for default method type. This one changes the authentication experience
+                            //  to use the Oath token screen. At that point, any Oath method can be used.
+                            if ("Oath" == defaultMethod)
+                                output += "\n\n **Usable ass Default Method** ";
+                            output += $"\nType of Method : Hardware Oath Token";
+                            output += $"\nDevice Name    : {hardOathAuthMethod.Device}";
+                            break;
+
+                        case Program.fido2AuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var fido2Method = (Fido2AuthenticationMethod)list[i];
+
+                            //not an option for default method, leaving for future use.
+                            //if ("Fido2" == defaultMethod)
+                            //    output += "\n\n **Default Method** ";
+
+                            output +=$"\nType of Method  : Fido2 Passkey";
+                            output +=$"\nDisplay Name    : {fido2Method.DisplayName}";
+                            output +=$"\nAAGuid          : {fido2Method.AaGuid}";
+                            output +=$"\nDevice          : {fido2Method.Model}";
+                            break;
+
+                        case Program.emailAuthMethod:
+                            //cast the array item into the actual object so that we have all the data available.
+                            var emailAuthMethod = (EmailAuthenticationMethod)list[i];
+                            
+                            //not useable for secondary authentication
+                            output += $"\nType of Method  : Alternate E-Mail";
+                            output += $"\nEmail address   : {emailAuthMethod.EmailAddress}";
+                            break;
+
+                        //these are no longer listed but are still included just in case
+                        case Program.phoneAppNotificationAuthMethhod:
+                            output +=$"\nType of Method : Phone App Notification";
+                            break;
+
+                        case Program.appPasswordAuthMethod:
+                            output +=$"\nType of Method : App Password";
+                            break;
+
+                        case Program.phoneAppOTPAuthMethod:
+                            output +=$"\nType of Method : Phone App OTP";
+                            break;
+
+                        case Program.passwordlessMSAuthenticatorMethod:
+                            output +=$"\nType of Method : Passwordless Microsoft Authenticator";
+                            break;
+
+
+                        //incase we get a new method type
+                        default:
+                            output +=$"\nType of Method : {list[i].OdataType}";
+                            break;
+                    }
+                }
+
+                //check if the rest of the properties are null before attempting to display
+                if (null != list[i].Id)
+                    output +=$"\nID              : {list[i].Id}";
+                if (null != list[i].CreatedDateTime)
+                    output +=$"\nCreatedDateTime : {list[i].CreatedDateTime}";
+
+
+                /******************************************* ommitting for now, leaving for reference and possible future use
+                if (null != item.AdditionalData)
+                {
+                    foreach (var entry in item.AdditionalData)
+                    {
+                        output +=$"Additional Data: {entry.Key}: {entry.Value}\n");
+                    }
+                }
+                if (null != item.BackingStore)
+                {
+                    foreach (var entry in item.BackingStore)
+                    {
+                        output +=$"Backing Store: {entry.Key}: {entry.Value}\n");
+                    }
+                }
+                */
+                output +=Environment.NewLine;
+
+               
+            }
+
+            Program.main_form.modifyRichTextBox(output);
+        }
+        //get MFA/SSPR registration details as well as others
+        public static async Task<string> getRegistrationAuthData(bool print)
+        {
+            //set the cursor to wait, this might take a while
+            //Form1.ActiveForm.Cursor = Cursors.WaitCursor;
+
+            //initialize the response variable
+           
+
+            //needed strings;
             string advDetails = "";
+            string defaultMethod = "None";
 
             //check if the tenant has a premium license.
             bool premium = await isTenantPremium();
 
             //confirm the licnese requirement is fulfilled
+
             if (premium)
             {
                 try
                 {
-                    result = await Program.graphClient.Reports.AuthenticationMethods.UserRegistrationDetails[Program.user.Id].GetAsync();
-                    //jsonString = JsonSerializer.Serialize(result, options);
-                    //advDetails = jsonString;
-                }
-                catch (ODataError e)
-                {
-                    MessageBox.Show("Error! getting MFA data: " + e);
-                }
+                    var result = await Program.graphClient.Reports.AuthenticationMethods.UserRegistrationDetails[Program.user.Id].GetAsync();
 
-                advDetails += $"\n"
+                    //prepare the string to return
+                    advDetails += $"\n*****************User Registration Data*****************\n"
                     + $"\nUser is an admin in Entra ID:            {result.IsAdmin}"
                     + $"\nUser is MFA registered:                  {result.IsMfaRegistered}"
                     + $"\nUser is MFA capable:                     {result.IsMfaCapable}"
@@ -220,20 +495,75 @@ namespace User_Security_Actions
                     + $"\nUser is SSPR enabled:                    {result.IsSsprEnabled}"
                     + $"\nUser is SSPR capable:                    {result.IsSsprCapable}"
                     + $"\nUser is passwordless capable:            {result.IsPasswordlessCapable}"
-                    + $"\nEntra preferred method enabled:          {result.IsSystemPreferredAuthenticationMethodEnabled}";
+                    + $"\nEntra preferred method enabled:          {result.IsSystemPreferredAuthenticationMethodEnabled.ToString()}";
 
-                //add the next line (system preferred method) only if the tenant has a system preferred method
-                if (true == result.IsSystemPreferredAuthenticationMethodEnabled)
-                    advDetails += $"\nEntra preferred method:                  {result.SystemPreferredAuthenticationMethods.FirstOrDefault()}";
+                    //add the next line (system preferred method) only if the tenant has a system preferred method
+                    if (true == result.IsSystemPreferredAuthenticationMethodEnabled)
+                        advDetails += $"\nEntra preferred method:                  {result.SystemPreferredAuthenticationMethods.FirstOrDefault()}";
 
-                advDetails += 
-                      $"\nUser preferred method of Secondary Auth: {result.UserPreferredMethodForSecondaryAuthentication}"
-                    + "\n"
-                    + "\n";
-                return advDetails;
+                    advDetails +=
+                          $"\nUser preferred method of Secondary Auth: {result.UserPreferredMethodForSecondaryAuthentication}"
+                        + "\n"
+                        + "\n";
+                    
+                    defaultMethod = result.UserPreferredMethodForSecondaryAuthentication.ToString() ?? "None";
+                }
+                catch (ODataError e)
+                {
+                    MessageBox.Show("Error! getting MFA data: " + e);
+                }
             }
             else
-                return "empty";
+            {
+                advDetails = "\n\nThis tenant does not have a Premium Entra ID license." +
+                    "\nSome advanced MFA features are not available.\n";
+
+                try
+                {
+                    var result = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
+
+                    //attempting to clean up the response and disply it
+                    //display isSystemPreferredAuthenticationMethodEnabled state
+                    advDetails = "\nEntra preferred method nabled          : " +
+                        result.IsSystemPreferredAuthenticationMethodEnabled.ToString();
+
+                    //display systemPreferredAuthenticationMethod value
+                    advDetails += "\nEntra preferred method                 : ";
+                    //systemPreferredAuthenticationMethod is always the last key in AdditionalData.
+                    //Need to check if the value is null and disply accordingly
+                    if (result.AdditionalData.ContainsKey("systemPreferredAuthenticationMethod"))
+                    {
+                        object value;
+                        result.AdditionalData.TryGetValue("systemPreferredAuthenticationMethod", out value);
+                        advDetails += value.ToString();
+                    }
+                    else
+                        advDetails += "NULL";
+
+                    //display userPreferredAuthenticationMethod value
+                    advDetails += "\nUser preferred method of Secondary Auth: ";
+                    //check if null and display accordingly
+                    if (null != result.UserPreferredMethodForSecondaryAuthentication)
+                        advDetails += result.UserPreferredMethodForSecondaryAuthentication.ToString();
+                    else
+                        advDetails += "NULL";
+
+                    defaultMethod = result.UserPreferredMethodForSecondaryAuthentication.ToString() ?? "None";
+                }
+                catch (ODataError err)
+                {
+                    MessageBox.Show(err.Message + "\nError getting SignInPreferences");
+                }
+
+                
+            }
+
+            if (print)
+                Program.main_form.modifyRichTextBox(advDetails);
+
+            //Form1.ActiveForm.Cursor = Cursors.Default;
+
+            return defaultMethod;
         }
 
         public static async Task<bool> isTenantPremium()

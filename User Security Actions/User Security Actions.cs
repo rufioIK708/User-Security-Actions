@@ -1,31 +1,33 @@
-﻿using System;
+﻿using Azure;
+using Azure.Identity;
+using Microsoft.Graph.Beta;
+using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
+using Microsoft.Graph.Beta.Models;
+//using Microsoft.Graph.Beta.Models.Networkaccess;
+using Microsoft.Graph.Beta.Models.ODataErrors;
+using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
+using Microsoft.Kiota.Abstractions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Windows.Forms;
-using System.Windows.Input;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.Xml;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Azure.Identity;
-using Microsoft.Graph.Beta;
-using Microsoft.Graph.Beta.Models;
-using Microsoft.Graph.Beta.Models.ODataErrors;
-using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
+using System.Windows.Forms;
+using System.Windows.Input;
 using User_Security_Actions;
-using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
-using Microsoft.Kiota.Abstractions;
-using System.Diagnostics.Eventing.Reader;
 
 
 namespace User_Security_Actions
 {
-
 
     public partial class Form1 : Form
     {
@@ -209,212 +211,20 @@ namespace User_Security_Actions
             displayBox.ScrollToCaret();
         }
 
-        public async void printMFAData(List<MFAData> list)
-        {
-            modifyRichTextBox("\n");
-
-            //display the number of methods
-            modifyRichTextBox($"\nNumber of AuthMehtods:  {list.Count}\n");
-
-            //loop through the list of MFA methods
-            foreach (var item in list)
-            {
-                if (null != item.OdataType)
-                {
-                    //Replace the OdataType with a more readable string
-                    switch (item.OdataType)
-                    {
-                        case Program.platformCredMethod:
-                            modifyRichTextBox($"Type of Method : Platform Credential\n");
-                            break;
-
-                        case Program.wHFBAuthMethod:
-                            modifyRichTextBox($"Type of Method : Windows Hello for Business\n");
-                            break;
-
-                        case Program.tAPAuthMethod:
-                            modifyRichTextBox($"Type of Method : Temporary Access Pass\n");
-                            break;
-
-                        case Program.softOathAuthMethod:
-                            modifyRichTextBox($"Type of Method : Software Oath Token\n");
-                            break;
-
-                        case Program.phoneAuthMethod:
-                            modifyRichTextBox($"Type of Method : Phone Authentication\n");
-                            try
-                            {
-                                var result = await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PhoneMethods[item.Id].GetAsync();
-                                modifyRichTextBox($"Phone number   : {result.PhoneNumber}\n");
-                                modifyRichTextBox($"Phone type     : {result.PhoneType}\n");
-                                modifyRichTextBox($"SMS SignInState: {result.SmsSignInState}\n");
-                            }
-                            catch (Exception err)
-                            {
-                                modifyRichTextBox("\nError getting phone method. Please try again.\n"
-                                    + "\n" + err.Message);
-                            }
-                            break;
-
-                        case Program.passwordAuthMethod:
-                            modifyRichTextBox($"Type of Method : Password\n");
-                            break;
-
-                        case Program.mSAuthenticatorAuthMethod:
-                            modifyRichTextBox($"Type of Method : Microsoft Authenticator\n");
-                            break;
-
-                        case Program.hardOathAuthMethod:
-                            modifyRichTextBox($"Type of Method : Hardware Oath Token\n");
-                            break;
-
-                        case Program.fido2AuthMethod:
-                            modifyRichTextBox($"Type of Method : Fido2 Passkey\n");
-                            break;
-
-                        case Program.emailAuthMethod:
-                            modifyRichTextBox($"Type of Method : Alternate E-Mail\n");
-                            break;
-
-                        //these are no longer listed but are still included just in case
-                        case Program.phoneAppNotificationAuthMethhod:
-                            modifyRichTextBox($"Type of Method : Phone App Notification\n");
-                            break;
-
-                        case Program.appPasswordAuthMethod:
-                            modifyRichTextBox($"Type of Method : App Password\n");
-                            break;
-
-                        case Program.phoneAppOTPAuthMethod:
-                            modifyRichTextBox($"Type of Method : Phone App OTP\n");
-                            break;
-
-                        case Program.passwordlessMSAuthenticatorMethod:
-                            modifyRichTextBox($"Type of Method : Passwordless Microsoft Authenticator\n");
-                            break;
-
-
-                        //incase we get a new method type
-                        default:
-                            modifyRichTextBox($"Type of Method : {item.OdataType}\n");
-                            break;
-                    }
-                }
-
-                //check if the rest of the properties are null before attempting to display
-                if (null != item.Id)
-                    modifyRichTextBox($"ID             : {item.Id}\n");
-                if (null != item.CreatedDateTime)
-                    modifyRichTextBox($"CreatedDateTime: {item.CreatedDateTime}\n");
-                if (null != item.AdditionalData)
-                {
-                    foreach (var entry in item.AdditionalData)
-                    {
-                        modifyRichTextBox($"Additional Data: {entry.Key}: {entry.Value}\n");
-                    }
-                }
-                if (null != item.BackingStore)
-                {
-                    foreach (var entry in item.BackingStore)
-                    {
-                        modifyRichTextBox($"Backing Store: {entry.Key}: {entry.Value}\n");
-                    }
-                }
-
-                modifyRichTextBox(Environment.NewLine);
-            }
-        }
+        
 
         //method to get and print the authetication methods for a user
-        public async Task<List<MFAData>> getAndPrintMFA(bool print)
+        public async Task<List<AuthenticationMethod>> getAndPrintMFA(bool print)
         {
-            string result;
+            string defaultMethod;
 
             Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
-            //does the tenant have a premium (P1/2) license?
-            if (await MFAExtras.isTenantPremium())
-            {
-                try
-                {
-                    //get the registration auth data for the user
-                    modifyRichTextBox("\n\nGetting advanced MFA details for user: " + Program.user.DisplayName + "\n");
-
-                    result = await MFAExtras.getRegistrationAuthData();
-                    modifyRichTextBox("\n" + result);
-                }
-                catch (ODataError err)
-                {
-                    MessageBox.Show(err.Message + "\nError getting advancded MFA details: confirm P1 license");
-                }
-            }
-            else
-            {
-                //the tenant does not have a premium license, notify the user
-                modifyRichTextBox("\n\nThis tenant does not have a Premium P1 license.\n" +
-                    "Some advanced MFA features are not available.\n");
-
-                try
-                {
-                    var signInPreferences = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
-
-
-                    //attempting to clean up the response and disply it
-                    //display isSystemPreferredAuthenticationMethodEnabled state
-                    modifyRichTextBox("Is SystemPreferredAuthenticaitonMethod Enabled: " +
-                        signInPreferences.IsSystemPreferredAuthenticationMethodEnabled.ToString() + "\n");
-
-                    //display systemPreferredAuthenticationMethod value
-                    modifyRichTextBox("SystemPreferredAuthenticationMethod: ");
-                    //systemPreferredAuthenticationMethod is always the last key in AdditionalData.
-                    //Need to check if the value is null and disply accordingly
-                    if ( null != signInPreferences.AdditionalData.Last().Value )
-                       modifyRichTextBox(signInPreferences.AdditionalData.Last().Value.ToString() + "\n");
-                    else
-                        modifyRichTextBox("NULL\n");
-
-                    //display userPreferredAuthenticationMethod value
-                    modifyRichTextBox("UserPreferredAuthenticationMethod: ");
-                    //check if null and display accordingly
-                    if ( null != signInPreferences.UserPreferredMethodForSecondaryAuthentication ) 
-                        modifyRichTextBox(signInPreferences.UserPreferredMethodForSecondaryAuthentication.ToString() + "\n");
-                    else
-                        modifyRichTextBox("NULL\n");
-                }
-                catch (ODataError err)
-                {
-                    MessageBox.Show(err.Message + "\nError getting SignInPreferences");
-                }
-            }
-
-            //get the MFA methods for the user
-            var response = await MFAExtras.getUserMfaMethods();
-
-            //serialize the response
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(response.Value, options);
+            var methods = await MFAExtras.getUserMfaMethods();
+            defaultMethod = await MFAExtras.getRegistrationAuthData(print);
             
-            //to verify the raw output
-            //modifyRichTextBox("\n" + jsonString);
-
-            //initialize a list of MFAData
-            var methods = new List<MFAData>();
-
-            //deserialize the JSON
-            try
-            {
-                methods = JsonSerializer.Deserialize<List<MFAData>>(jsonString);
-            }
-            catch (JsonException e)
-            {
-                MessageBox.Show("Error converting JSON\n" +
-                "error: " + e.Message + "\nadditional info : " + e.Data);
-            }
-
-
             if (null != methods && print)
-                printMFAData(methods);
+                MFAExtras.printMFAData(methods, defaultMethod);
 
             Form1.ActiveForm.Cursor = Cursors.Default;
 
@@ -430,179 +240,183 @@ namespace User_Security_Actions
 
             var method = MFAList.Find(x => x.Id == id);
             //verify the input & act: remove the method or no action
-            foreach (var item in MFAList)
+        
+            //find the Id provided in the ID of authentication methods
+            if (method.Id == id)
             {
-                //find the Id provided in the ID of authentication methods
-                if (item.Id == id)
+                modifyRichTextBox($"\n \nRemoving method: {method.OdataType} with ID: {method.Id}\n");
+
+                switch (method.OdataType)
                 {
-                    modifyRichTextBox($"\n \nRemoving method: {item.OdataType} with ID: {item.Id}\n");
+                    //WHFB method
+                    case Program.wHFBAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                WindowsHelloForBusinessMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //TAP method
+                    case Program.tAPAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                TemporaryAccessPassMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //software Oath method
+                    case Program.softOathAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                SoftwareOathMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //platform credential
+                    case Program.platformCredMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                PlatformCredentialMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Phone number-based methods ( mobile, alternamteMobile, & office)
+                    case Program.phoneAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                PhoneMethods[method.Id].DeleteAsync();
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Password method - can't be done, let them know
+                    case Program.passwordAuthMethod:
+                        MessageBox.Show("You cannot delete passwords at this time.");
+                        break;
+                    //MS Authenticator app method
+                    case Program.mSAuthenticatorAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                MicrosoftAuthenticatorMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Hardware Oath token method
+                    case Program.hardOathAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                HardwareOathMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Fido 2 Method
+                    case Program.fido2AuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                Fido2Methods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Alternate email method
+                    case Program.emailAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                EmailMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //this is old and shouldn't be used but it's here for completeness
+                    case Program.phoneAppNotificationAuthMethhod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                MicrosoftAuthenticatorMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
 
-                    switch (item.OdataType)
-                    {
-                        //WHFB method
-                        case Program.wHFBAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    WindowsHelloForBusinessMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //TAP method
-                        case Program.tAPAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    TemporaryAccessPassMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //software Oath method
-                        case Program.softOathAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    SoftwareOathMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //platform credential
-                        case Program.platformCredMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PlatformCredentialMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Phone number-based methods ( mobile, alternamteMobile, & office)
-                        case Program.phoneAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PhoneMethods[item.Id].DeleteAsync();
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Password method - can't be done, let them know
-                        case Program.passwordAuthMethod:
-                            MessageBox.Show("You cannot delete passwords at this time.");
-                            break;
-                        //MS Authenticator app method
-                        case Program.mSAuthenticatorAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    MicrosoftAuthenticatorMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Hardware Oath token method
-                        case Program.hardOathAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    HardwareOathMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Fido 2 Method
-                        case Program.fido2AuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    Fido2Methods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Alternate email method
-                        case Program.emailAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    EmailMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //this is old and shouldn't be used but it's here for completeness
-                        case Program.phoneAppNotificationAuthMethhod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    MicrosoftAuthenticatorMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
+                    case Program.appPasswordAuthMethod:
+                        MessageBox.Show("Cannot remove App Passwords from here. My apologies.\n"
+                            + "Please do so from the Entra portal");
+                        break;
 
-                        case Program.appPasswordAuthMethod:
-                            MessageBox.Show("Cannot remove App Passwords from here. My apologies.\n"
-                                + "Please do so from the Entra portal");
-                            break;
-
-                        default:
-                            //we shouldn't get here, the list is all inclusive... not sure what to do here...
-                            //throw an exception? error message?
-                            break;
-                    }
-
-
+                    default:
+                        //we shouldn't get here, the list is all inclusive... not sure what to do here...
+                        //throw an exception? error message?
+                        break;
                 }
 
 
-                if (successful)
-                {
-                    // if we leave the loop, no match was found
-                    MessageBox.Show("Method " + Program.input + " deleted.");
-                }
+            }
+
+
+            if (successful)
+            {
+                // if we leave the loop, no match was found
+                MessageBox.Show("Method " + Program.input + " deleted.");
             }
         }
         private async void getUserMFA_Click(object sender, EventArgs e)
         {
             modifyRichTextBox("\n\nGetting MFA methods for user: " + Program.user.DisplayName + "\n\n");
             await getAndPrintMFA(true);
-
-            //get registration info for the user
-            //string regData = await MFAExtras.getRegistrationAuthData();
-            //modifyRichTextBox("\n\n================REGISTRATION DATA=======================\n\n" + regData);
 
         }
 
@@ -770,8 +584,11 @@ namespace User_Security_Actions
             //the active user is stored in Program.user and is accessible here
 
             //need to get the authentication methods and isolate the password method & its ID
-            var response = await MFAExtras.getUserMfaMethods();
+            //var response = await MFAExtras.getUserMfaMethods();
+            var methods = await MFAExtras.getUserMfaMethods();
 
+            var passwordMethod = methods.Find(x => x.OdataType == Program.passwordAuthMethod);
+            /*****
             //serialize the response
             var options = new JsonSerializerOptions { WriteIndented = true };
             string jsonString = JsonSerializer.Serialize(response.Value, options);
@@ -792,11 +609,12 @@ namespace User_Security_Actions
                 MessageBox.Show("Error converting JSON\n" +
                 "error: " + err.Message + "\nadditional info : " + err.Data);
             }
+            
 
             //isolate the password method
             MFAData passwordMethod = new MFAData();
 
-            foreach (MFAData authenticationMethod in methods)
+            foreach (var authenticationMethod in methods)
             {
                 if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
                 {
@@ -804,6 +622,8 @@ namespace User_Security_Actions
                     break;
                 }
             }
+            *****/
+
             //label to show the message
             string labelMessage = "Reset the password for: " + Program.user.DisplayName;
             labelMessage += "\n\nPlease enter the new password, " +
@@ -814,10 +634,9 @@ namespace User_Security_Actions
 
             string input = Program.input.Trim();
             Program.input = null;
-            input = input.ToUpper();
-
+            
             //verify the input & act: reset the password or no action
-            switch (input)
+            switch (input.ToUpper())
             {
                 case ("CANCEL"):
                     break;
@@ -1000,7 +819,7 @@ namespace User_Security_Actions
        
 
         private async void buttonResetMFA_Click(object sender, EventArgs e)
-        {
+        {----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             //the active user is stored in Program.user and is accessible here
 
             //there are two methods to reset MFA, either by removing all methods or callin
@@ -1012,7 +831,7 @@ namespace User_Security_Actions
 
             /****** its not working
             try
-            {
+            {++++++++++++++++++++++++
                 var response = Program.graphClient.
                 "https://graph.microsoft.com/beta/users/" + Program.user.Id +
                 "/authentication/methods/resetTraditionalAuthenticationMethods").
@@ -1034,8 +853,8 @@ namespace User_Security_Actions
             //gather all methods, then remove only the MFA ones (exclude password, email, and security questions.)
 
             //get all the methods and store
-            var response = await getAndPrintMFA(true);
-            string defaultMethod = "";
+            var response = await getAndPrintMFA(false);
+            string defaultMethod;
             string[] phoneMethods = { };
             int count = 0;
             
@@ -1085,9 +904,9 @@ namespace User_Security_Actions
                         response[i].OdataType != Program.emailAuthMethod &&
                         response[i].OdataType != Program.appPasswordAuthMethod)
                     {
-                        if (response[i].OdataType == Program.phoneAuthMethod)
+                        if (response[i].isDefault(await MFAExtras.getRegistrationAuthData(false)))
                         {
-                            phoneMethods[count] = response[i].Id;
+                            defaultMethod = response[i].Id;
                             count++;
                         }
                         else
@@ -1096,7 +915,7 @@ namespace User_Security_Actions
                 }
                 //reset the default method
                 await deleteMethod(defaultMethod);
-                ******************************************************************/
+                //**************************************/
             }
 
 
@@ -1141,19 +960,20 @@ namespace User_Security_Actions
         private async void buttonRegisterFido2Passkey_Click(object sender, EventArgs e)
         {
             WebauthnCredentialCreationOptions response = new();
+
             try
             {
                 response = await Program.graphClient.Users[Program.user.Id].
                     Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes.
                     GetAsync(static (requestConfiguration) =>
                     {
-                        requestConfiguration.QueryParameters.ChallengeTimeoutInMinutes = 10;
+                        requestConfiguration.QueryParameters.ChallengeTimeoutInMinutes = 5;
                     });
             }
             catch (Exception err)
             {
                 MessageBox.Show("Error registering Fido2 Passkey. Please try again."
-                    + "\n" + err.Message);
+                    + "\n" + err.InnerException);
             }
         }
 
@@ -1197,16 +1017,77 @@ namespace User_Security_Actions
 
         private async void buttonFunctions_Click(object sender, EventArgs e)
         {
-            var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
-            modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
-            modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
-            if (null != response.OdataType)
-                modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
+            var response = await Program.graphClient.Users[Program.user.Id].Authentication.Methods.GetAsync();
+            var methods = response.Value;
 
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(response, options);
+            for(int i = 0; i < methods.Count; i++)
+            {
+                if( Program.mSAuthenticatorAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    MicrosoftAuthenticatorAuthenticationMethod item = (MicrosoftAuthenticatorAuthenticationMethod)methods[i];
+                    
+                }
+                else if (Program.fido2AuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    Fido2AuthenticationMethod item = (Fido2AuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.hardOathAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    HardwareOathAuthenticationMethod item = (HardwareOathAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.softOathAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    SoftwareOathAuthenticationMethod item = (SoftwareOathAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.phoneAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PhoneAuthenticationMethod item = (PhoneAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.passwordAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PasswordAuthenticationMethod item = (PasswordAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.tAPAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    TemporaryAccessPassAuthenticationMethod item = (TemporaryAccessPassAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.platformCredMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PlatformCredentialAuthenticationMethod item = (PlatformCredentialAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.wHFBAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    WindowsHelloForBusinessAuthenticationMethod item = (WindowsHelloForBusinessAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.emailAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    EmailAuthenticationMethod item = (EmailAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else
+                {
+                    //unknown method type, do nothing or log it
+                }
+            }
 
-            modifyRichTextBox("\n" + jsonString);
 
             //var result = await Program.graphClient.Users[Program.user.Id].Authentication.
 
