@@ -23,7 +23,7 @@ namespace User_Security_Actions
             this.Text = title;
             //hide the split container, as we are not using it
             splitContainer1.Hide();
-            labelMethodMessage.Text = "The new password is: ";
+            labelMethodMessage.Text = "Please have the user use the below on their next sign-in: ";
             input1.Text = password;
             input1.BackColor = System.Drawing.SystemColors.Control;
             input1.ReadOnly = true;

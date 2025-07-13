@@ -312,6 +312,7 @@
             this.buttonFunctions.TabIndex = 14;
             this.buttonFunctions.Text = "Test functions";
             this.buttonFunctions.UseVisualStyleBackColor = true;
+            this.buttonFunctions.Visible = false;
             this.buttonFunctions.Click += new System.EventHandler(this.buttonFunctions_Click);
             // 
             // displayBox

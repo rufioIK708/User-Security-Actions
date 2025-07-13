@@ -24,6 +24,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 using User_Security_Actions;
+using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
+using Microsoft.Kiota.Abstractions;
+using static System.Net.Mime.MediaTypeNames;
+
 
 
 namespace User_Security_Actions
@@ -76,6 +80,8 @@ namespace User_Security_Actions
                     buttonRemoveMethod.Enabled = true;
                     buttonRevokeSessions.Show();
                     buttonRevokeSessions.Enabled = true;
+                    buttonAddTapMethod.Show();
+                    buttonAddTapMethod.Enabled = true;
 
                     //specific button text based on account status
                     bool? enabled = Program.user.AccountEnabled;
@@ -108,6 +114,8 @@ namespace User_Security_Actions
                     buttonRemoveMethod.Enabled = false;
                     buttonRevokeSessions.Hide();
                     buttonRevokeSessions.Enabled = false;
+                    buttonAddTapMethod.Hide();
+                    buttonAddTapMethod.Enabled = false;
                 }
             }
             else
@@ -1015,7 +1023,9 @@ namespace User_Security_Actions
             Program.existPhoneMethods = false;
             Program.user = null;
             Program.admin = null;
-
+            displayBox.Clear();
+            modifyRichTextBox("Just for reference");
+            
             Form1_Load(sender, e);
         }
 
@@ -1114,6 +1124,16 @@ namespace User_Security_Actions
         private async void buttonAddTapMethod_Click(object sender, EventArgs e)
         {
             //1. Get and parse the TAP method policy
+            //2. Modify the form to show the options
+            //3. Get the input from the user
+            //4. Generate the request from the input
+            //5. Submit the request
+            //6. Display the result
+            AuthenticationMethodConfiguration tapPolicy = new();
+
+
+
+            //1. Get and parse the TAP method policy
             try
             {
                 //var response = await Program.graphClient.Policies.
@@ -1131,17 +1151,18 @@ namespace User_Security_Actions
                 //        });
 
                 //get the TAP method policy
-                var result = await Program.graphClient.Policies.
-                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].
-                       GetAsync();
+                tapPolicy = await Program.graphClient.Policies.
+                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"]
+                       .GetAsync();
 
-                //serialize the response
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string jsonString = JsonSerializer.Serialize(result, options);
-                MessageBox.Show("able to serialize first string");
+                //serialize the response - useful for debugging and seeing the data
+                //var options = new JsonSerializerOptions { WriteIndented = true };
+                //string jsonString = JsonSerializer.Serialize(tapPolicy, options);
 
-                var test = Program.graphClient.Policies.AuthenticationMethodsPolicy.GetAsync();
+                //testing by gathering the entire policy, not just the TAP method
+                //var test = Program.graphClient.Policies.AuthenticationMethodsPolicy.GetAsync();
                 //string jsonStringAuthPolicy = JsonSerializer.Serialize(test.Result.AuthenticationMethodConfigurations, options);
+
                 MessageBox.Show("able to serialize second string");
 
                 if (0 == result.State)
@@ -1161,17 +1182,46 @@ namespace User_Security_Actions
                         "\nPlease configure it in the Entra Portal.");
                 }
 
+
+                //MessageBox.Show("able to serialize second string");
+                //foreach (var item in test.Result.AuthenticationMethodConfigurations)
+                //{
+                //    var jsonOut = JsonSerializer.Serialize(item.AdditionalData, options);
+                //    modifyRichTextBox($"\n{jsonOut}");
+                //}
+                //modifyRichTextBox("\n" + test.Result.AuthenticationMethodConfigurations[0]);
+
             }
             catch (Exception err)
             {
                 MessageBox.Show("Error getting TAP method policy. Please try again."
                     + "\n" + err.Message);
             }
+
+            //if the policy is not enabled, we stop here
+            if (0 != tapPolicy.State)
+            {
+                MessageBox.Show("The TAP method is not enabled in this tenant,\n"
+                    + "or for this user.\n"
+                    + "Please contact your administrator.");
+                return;
+            }
+            //otherwise, the policy is enabld and the user is not excluded, we can continue
+
             //2. Modify the form to show the options
+
             //3. Get the input from the user
             //4. Generate the request from the input
             //5. Submit the request
             //6. Display the result
+            // the below would be set from tapPolicy.* but the values are not being returned
+            int defaultLength = 8;
+            int defaultLifetimeInMinutes = 60;
+            int maximumLifetimeInMinutes = 480;
+            int minimumLifetimeInMinutes = 60;
+            bool isUsableOnce = false;
+
+            new TAPForm(minimumLifetimeInMinutes,maximumLifetimeInMinutes,defaultLifetimeInMinutes).ShowDialog();
 
         }
     }
