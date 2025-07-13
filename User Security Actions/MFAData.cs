@@ -182,7 +182,9 @@ namespace User_Security_Actions
                     case "Sms":
                         if (method.OdataType == Program.phoneAuthMethod)
                         {
+                            //cast the method to PhoneAuthenticationMethod to access PhoneType
                             var phoneMethod = (PhoneAuthenticationMethod)method;
+                            // check if the PhoneType is compatible with the default method
                             if (phoneMethod.PhoneType.ToString() == "Mobile")
                                 isDefault = true;
                         }
@@ -190,7 +192,9 @@ namespace User_Security_Actions
                     case "VoiceOffice":
                         if (method.OdataType == Program.phoneAuthMethod)
                         {
+                            //cast the method to PhoneAuthenticationMethod to access PhoneType
                             var phoneMethod = (PhoneAuthenticationMethod)method;
+                            // check if the PhoneType is compatible with the default method
                             if (phoneMethod.PhoneType.ToString() == "Office")
                                 isDefault = true;
                         }
@@ -198,7 +202,9 @@ namespace User_Security_Actions
                     case "VoiceMobile":
                         if (method.OdataType == Program.phoneAuthMethod)
                         {
+                            //cast the method to PhoneAuthenticationMethod to access PhoneType
                             var phoneMethod = (PhoneAuthenticationMethod)method;
+                            // check if the PhoneType is compatible with the default method
                             if (phoneMethod.PhoneType.ToString() == "Mobile")
                                 isDefault = true;
                         }
@@ -206,24 +212,25 @@ namespace User_Security_Actions
                     case "VoiceAlternateMobile":
                         if (method.OdataType == Program.phoneAuthMethod)
                         {
+                            //cast the method to PhoneAuthenticationMethod to access PhoneType
                             var phoneMethod = (PhoneAuthenticationMethod)method;
+                            // check if the PhoneType is compatible with the default method
                             if (phoneMethod.PhoneType.ToString() == "AlternateMobile")
                                 isDefault = true;
                         }
                         break;
                     case "Push":
+                        // check if the method type is compatible with the default method
                         if (method.OdataType == Program.mSAuthenticatorAuthMethod)
                         {
                             isDefault = true;
                         }
                         break;
                     case "Fido2":
-                        if (method.OdataType == Program.fido2AuthMethod)
-                        {
-                            isDefault = true;
-                        }
+                        //not an option for default method, leaving for future use.
                         break;
                     case "Oath":
+                        //not an option for default method, leaving for future use.
                         break;
                     default:
                         break;
@@ -464,13 +471,7 @@ namespace User_Security_Actions
         }
         //get MFA/SSPR registration details as well as others
         public static async Task<string> getRegistrationAuthData(bool print)
-        {
-            //set the cursor to wait, this might take a while
-            //Form1.ActiveForm.Cursor = Cursors.WaitCursor;
-
-            //initialize the response variable
-           
-
+        { 
             //needed strings;
             string advDetails = "";
             string defaultMethod = "None";
@@ -515,6 +516,7 @@ namespace User_Security_Actions
             }
             else
             {
+                //Message about additional features not available due to licensing
                 advDetails = "\n\nThis tenant does not have a Premium Entra ID license." +
                     "\nSome advanced MFA features are not available.\n";
 
@@ -524,12 +526,14 @@ namespace User_Security_Actions
 
                     //attempting to clean up the response and disply it
                     //display isSystemPreferredAuthenticationMethodEnabled state
-                    advDetails = "\nEntra preferred method nabled          : " +
+                    advDetails += "\nEntra preferred method nabled          : " +
                         result.IsSystemPreferredAuthenticationMethodEnabled.ToString();
 
                     //display systemPreferredAuthenticationMethod value
                     advDetails += "\nEntra preferred method                 : ";
                     //systemPreferredAuthenticationMethod is always the last key in AdditionalData.
+                    //  so we can use last, but needs a better way to do this.
+
                     //Need to check if the value is null and disply accordingly
                     if (result.AdditionalData.ContainsKey("systemPreferredAuthenticationMethod"))
                     {
@@ -548,6 +552,7 @@ namespace User_Security_Actions
                     else
                         advDetails += "NULL";
 
+                    //set the default method for the user preferred method
                     defaultMethod = result.UserPreferredMethodForSecondaryAuthentication.ToString() ?? "None";
                 }
                 catch (ODataError err)

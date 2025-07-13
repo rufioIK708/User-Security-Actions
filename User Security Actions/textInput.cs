@@ -150,6 +150,8 @@ namespace User_Security_Actions
 
         private void buttonCancel_Click(object sender, EventArgs e)
         {
+            //clear the input and set the cancelled flag
+            Program.input = "";
             Program.cancelled = true;
             this.Close();
         }
