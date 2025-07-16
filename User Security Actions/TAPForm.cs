@@ -14,41 +14,69 @@ namespace User_Security_Actions
 {
     public partial class TAPForm: Form
     {
-        public TAPForm(int minimumLifetimeInMinutes, int maximumLifetimeInMinutes, int defaultLifetimeInMinutes)
+        public TAPForm(int? minimumLifetimeInMinutes, int? maximumLifetimeInMinutes,
+            int? defaultLifetimeInMinutes, bool? isUsableOnce)
         {
             InitializeComponent();
-            this.numericUpDownMinutes.Minimum = minimumLifetimeInMinutes;
-            this.numericUpDownMinutes.Maximum = maximumLifetimeInMinutes;
-            this.numericUpDownMinutes.Value = defaultLifetimeInMinutes;
+
+            //set the values for the date/time pickers and lifetime controls
+            this.numericUpDownMinutes.Minimum = (decimal)minimumLifetimeInMinutes;
+            this.numericUpDownMinutes.Maximum = (decimal)maximumLifetimeInMinutes;
+            this.numericUpDownMinutes.Value = (decimal)defaultLifetimeInMinutes;
             this.tapDatePicker.MinDate = DateTime.Now;
             this.tapTimePicker.Value = DateTime.Now;
+
+            //check if the TAP is usable once
+            if ((bool)isUsableOnce)
+            {
+                //policy states that TAPs are not reusable,
+                //so disable the checkbox and set it to false
+                this.checkBoxReUse.Enabled = false;
+                this.checkBoxReUse.Checked = true;
+            }
         }
 
         private async void button1_Click(object sender, EventArgs e)
         {
-            //3. Get the input from the user
-            DateTime tapStartDate = tapDatePicker.Value.Date;
-            TimeSpan tapStartTime = tapTimePicker.Value.TimeOfDay;
-            
-
-            Program.tapDurationInMinutes = (int)numericUpDownMinutes.Value;
-            Program.tapReusable = checkBoxReUse.Checked;
-
+            TemporaryAccessPassAuthenticationMethod requestBody;
             this.Cursor = Cursors.WaitCursor;
 
+            //1. Copy the input from the user
 
-            //4. Generate the request from the input
-            var requestBody = new TemporaryAccessPassAuthenticationMethod
+
+            DateTime tapStartDate = tapDatePicker.Value.Date;
+            TimeSpan tapStartTime = tapTimePicker.Value.TimeOfDay;
+            int tapDurationInMinutes = (int)numericUpDownMinutes.Value;
+            bool tapIsUsableOnce = checkBoxReUse.Checked;
+
+            //2. Generate the request from the input
+
+            if (checkBoxPresentOrFurtureTAP.Checked)
             {
-                StartDateTime = tapStartDate.Add(tapStartTime).ToUniversalTime(),
-                LifetimeInMinutes = Program.tapDurationInMinutes,
-                IsUsableOnce = Program.tapReusable,
-            };
-            //5. Submit the request
+                //if the checkbox is checked, we are creating a future TAP
+                //so enable the date and time pickers
+                requestBody = new TemporaryAccessPassAuthenticationMethod
+                {
+                    StartDateTime = (tapStartDate.Add(tapStartTime)).ToUniversalTime(),
+                    LifetimeInMinutes = tapDurationInMinutes,
+                    IsUsableOnce = tapIsUsableOnce,
+                };
+            }
+            else
+            {
+                requestBody = new TemporaryAccessPassAuthenticationMethod
+                { 
+                    LifetimeInMinutes = tapDurationInMinutes,
+                    IsUsableOnce = tapIsUsableOnce,
+                };
+            }
+            
+
+            //3. Submit the request
             TemporaryAccessPassAuthenticationMethod tapResult = new();
 
-            //5.a - check the start date/time of the TAP request
-            MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
+            //3.a - check the start date/time of the TAP request
+            //MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
             try
             {
                 tapResult = await Program.graphClient.Users[Program.user.Id]
@@ -65,11 +93,34 @@ namespace User_Security_Actions
             //6. Display the result
             this.Cursor = Cursors.Default;
             this.Close();
-            new textInput($"You can use the TAP below starting from\n {tapStartDate.ToLongDateString()} at {tapStartTime}.\n",
-                        "TAP Creation Result", tapResult.TemporaryAccessPass).ShowDialog();
+
+            string mainLabel = $"You can use the TAP below starting from\n {tapStartDate.ToLongDateString()} at {tapStartTime}.\n";
+            string title = "TAP Creation Result";
+
+            new textInput(mainLabel, title, tapResult.TemporaryAccessPass).ShowDialog();
+
+            
 
         }
 
-
+        private void checkBoxPresentOrFurtureTAP_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxPresentOrFurtureTAP.Checked)
+            {
+                //if the checkbox is checked, we are creating a future TAP
+                //so enable the date and time pickers
+                tapDatePicker.Enabled = true;
+                tapTimePicker.Enabled = true;
+                //labelPresentOrFutureTAP.Text = "Create a future TAP";
+            }
+            else
+            {
+                //if the checkbox is unchecked, we are creating a present TAP
+                //so disable the date and time pickers
+                tapDatePicker.Enabled = false;
+                tapTimePicker.Enabled = false;
+                //labelPresentOrFutureTAP.Text = "Create a present TAP";
+            }
+        }
     }
 }

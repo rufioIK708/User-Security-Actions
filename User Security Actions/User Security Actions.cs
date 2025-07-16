@@ -1062,24 +1062,19 @@ namespace User_Security_Actions
             /* - the list of static variables to use as reference for what needs to be cleared.
              *         public static InteractiveBrowserCredential token;
              *         public static GraphServiceClient graphClient; 
-             *         // - - string to read input from users
+                       // - - string to read input from users
              *         public static string input;
 
-             *         // - - bools to track the state of the app
+                       // - - bools to track the state of the app
              *         public static bool signedIn = false;
              *         public static bool validUser = false;
-             *         // - - - might be needed to cleaner password reset alternative in the future
-             *         public static bool existPhoneMethods = false;
                         // - - users to store the user and admin details
-                        public static Microsoft.Graph.Beta.Models.User user;
-                        public static Microsoft.Graph.Beta.Models.User admin;
+             *          public static Microsoft.Graph.Beta.Models.User user;
+             *          public static Microsoft.Graph.Beta.Models.User admin;
                         // enumerators for phone method storage when we create them.  
                         public static PhoneOption phoneOptions;
                         public static MethodType methodType;
-                        // - - - TAP method details
-                        public static DateTime tapStart;
-                        public static int tapDurationInMinutes;
-                        public static bool tapReusable;
+                      
             */
             //Program.graphClient.
             Program.token = null;
@@ -1087,7 +1082,6 @@ namespace User_Security_Actions
             Program.input = null;
             Program.signedIn = false;
             Program.validUser = false;
-            Program.existPhoneMethods = false;
             Program.user = null;
             Program.admin = null;
             
@@ -1127,52 +1121,29 @@ namespace User_Security_Actions
 
         private async void buttonAddTapMethod_Click(object sender, EventArgs e)
         {
-            //1. Get and parse the TAP method policy
+            //1. Get the TAP method policy
             //2. Modify the form to show the options
             //3. Get the input from the user
             //4. Generate the request from the input
             //5. Submit the request
             //6. Display the result
-            AuthenticationMethodConfiguration tapPolicy = new();
+
 
 
 
             //1. Get and parse the TAP method policy
+
+            TemporaryAccessPassAuthenticationMethodConfiguration tapPolicy = new();
+
             try
             {
-                //var response = await Program.graphClient.Policies.
-                //    AuthenticationMethodsPolicy.GetAsync();
-
                 //get the TAP method policy
-                //unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
-                //makes it impossible to generate a UI that the required restraints.
-                //trying to select 'AdditionalProperties' but it doesn't work
-                //var result = await Program.graphClient.Policies.
-                //    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].
-                //       GetAsync((requestConfiguration) =>
-                //        {
-                //           requestConfiguration.QueryParameters.Select = new[] { "AdditionalProperties" };
-                //        });
-
-                //get the TAP method policy
-                tapPolicy = await Program.graphClient.Policies.
+                // unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
+                // have to cast the response into TemporaryAccessPassAuthenticationMethodConfiguration
+                
+                tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration) await Program.graphClient.Policies.
                     AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"]
                        .GetAsync();
-
-                //serialize the response - useful for debugging and seeing the data
-                //var options = new JsonSerializerOptions { WriteIndented = true };
-                //string jsonString = JsonSerializer.Serialize(tapPolicy, options);
-
-                //testing by gathering the entire policy, not just the TAP method
-                //var test = Program.graphClient.Policies.AuthenticationMethodsPolicy.GetAsync();
-                //string jsonStringAuthPolicy = JsonSerializer.Serialize(test.Result.AuthenticationMethodConfigurations, options);
-                //MessageBox.Show("able to serialize second string");
-                //foreach (var item in test.Result.AuthenticationMethodConfigurations)
-                //{
-                //    var jsonOut = JsonSerializer.Serialize(item.AdditionalData, options);
-                //    modifyRichTextBox($"\n{jsonOut}");
-                //}
-                //modifyRichTextBox("\n" + test.Result.AuthenticationMethodConfigurations[0]);
             }
             catch (Exception err)
             {
@@ -1181,25 +1152,34 @@ namespace User_Security_Actions
             }
 
             //if the policy is not enabled, we stop here
-            if (0 != tapPolicy.State)
+            if (AuthenticationMethodState.Disabled == tapPolicy.State)
             {
                 MessageBox.Show("The TAP method is not enabled in this tenant,\n"
                     + "or for this user.\n"
                     + "Please contact your administrator.");
-                return;
+                
+            }
+            //if the user is excluded from the TAP method, we stop here
+            else if (false)
+            {
+                MessageBox.Show("The user is excluded from the TAP method\n"
+                    + "due to inclusion into the group(s):\n"
+                    + "Please contact your administrator.");
             }
             //otherwise, the policy is enabld and the user is not excluded, we can continue
+            else
+            {
+                //2. Modify the form to show the options
+                int? defaultLength = tapPolicy.DefaultLength;
+                int? defaultLifetimeInMinutes = tapPolicy.DefaultLifetimeInMinutes;
+                int? maximumLifetimeInMinutes = tapPolicy.MaximumLifetimeInMinutes;
+                int? minimumLifetimeInMinutes = tapPolicy.MinimumLifetimeInMinutes;
+                bool? isUsableOnce = tapPolicy.IsUsableOnce;
 
-            //2. Modify the form to show the options
-
-            // the below would be set from tapPolicy.* but the values are not being returned
-            int defaultLength = 8;
-            int defaultLifetimeInMinutes = 60;
-            int maximumLifetimeInMinutes = 480;
-            int minimumLifetimeInMinutes = 60;
-            bool isUsableOnce = false;
-
-            new TAPForm(minimumLifetimeInMinutes,maximumLifetimeInMinutes,defaultLifetimeInMinutes).ShowDialog();
+                new TAPForm(minimumLifetimeInMinutes, maximumLifetimeInMinutes,
+                    defaultLifetimeInMinutes, isUsableOnce).ShowDialog();
+            }
+               
         }
     }
 }

@@ -233,7 +233,7 @@ namespace User_Security_Actions
             {
                 var response = await Program.graphClient.Organization.GetAsync();
                 var orgDetails = JsonSerializer.Serialize(response, options);
-                if (orgDetails.Contains("AADPremium"))
+                if (response.Value.ToString().Contains("AADPremium"))
                 {
                     successful = true;
                 }
@@ -248,6 +248,30 @@ namespace User_Security_Actions
             }
 
             return successful;
+        }
+
+        public static async Task<bool> isMemberOfGroup(string groupId)
+        {
+            bool isMember = false;
+            try
+            {
+                var response = await Program.graphClient.Users[Program.user.Id].TransitiveMemberOf.GetAsync();
+                foreach (var item in response.Value)
+                {
+                    
+                    if (item.Id == groupId)
+                    {
+                        isMember = true;
+                        break;
+                    }
+                }
+            }
+            catch (ODataError e)
+            {
+                MessageBox.Show("Error! checking group membership: " + e);
+            }
+            
+            return isMember;
         }
     }
 }
