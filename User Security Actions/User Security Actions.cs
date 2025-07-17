@@ -36,7 +36,7 @@ namespace User_Security_Actions
             InitializeComponent();
         }
 
-        private  void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
             /* attempting to change the form based on the sign-in state, not working as expected*/
             if (Program.signedIn)
@@ -227,7 +227,8 @@ namespace User_Security_Actions
                             {
                                 modifyRichTextBox("\nError getting phone method. Please try again.\n"
                                     + "\n" + err.Message);
-                            }break;
+                            }
+                            break;
 
                         case Program.passwordAuthMethod:
                             modifyRichTextBox($"Type of Method : Password\n");
@@ -301,13 +302,13 @@ namespace User_Security_Actions
         //method to get and print the authetication methods for a user
         public async Task<List<MFAData>> getAndPrintMFA(bool print)
         {
-            
+
 
             if (await MFAExtras.isTenantPremium())
             {
                 try
                 {
-               
+
                     //to verify the raw output
                     modifyRichTextBox("\n" + await MFAExtras.getRegistrationAuthData());
                 }
@@ -317,7 +318,7 @@ namespace User_Security_Actions
                 }
             }
 
-            
+
 
             //get the MFA methods for the user
             var response = await MFAExtras.getUserMfaMethods();
@@ -514,7 +515,7 @@ namespace User_Security_Actions
 
 
                 }
-                    
+
 
                 if (successful)
                 {
@@ -712,7 +713,8 @@ namespace User_Security_Actions
             //isolate the password method
             MFAData passwordMethod = new MFAData();
 
-            foreach (MFAData authenticationMethod in methods) {
+            foreach (MFAData authenticationMethod in methods)
+            {
                 if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
                 {
                     passwordMethod = authenticationMethod;
@@ -749,7 +751,7 @@ namespace User_Security_Actions
                     {
                         MessageBox.Show(err.Error + "\nError resetting password: try again");
                     }
-                   
+
                     break;
                 case (""):
                     MessageBox.Show("No password entered. Please try again.");
@@ -910,7 +912,7 @@ namespace User_Security_Actions
             ///////////////////////////////////////////////////
             //// resetting via traditional authenticaiton endpoint
             ///////////////////////////////////////////////////
-            
+
             /****** its not working
             try
             {
@@ -933,7 +935,7 @@ namespace User_Security_Actions
             ///////////////////////////////////////////////////
 
             //gather all methods, then remove only the MFA ones (exclude password, email, and security questions.)
-            
+
             //get all the methods and store
             var response = await getAndPrintMFA(true);
             string defaultMethod = "";
@@ -957,21 +959,21 @@ namespace User_Security_Actions
                 for (int x = 0; x < 3; x++)
                 {
                     for (int i = 0; i < response.Count; i++)
-                    //if the method is not a password, email, or security question, remove it.
-                    if (response[i].OdataType != Program.passwordAuthMethod &&
-                        response[i].OdataType != Program.emailAuthMethod &&
-                        response[i].OdataType != Program.appPasswordAuthMethod)
-                    {
-                        try
+                        //if the method is not a password, email, or security question, remove it.
+                        if (response[i].OdataType != Program.passwordAuthMethod &&
+                            response[i].OdataType != Program.emailAuthMethod &&
+                            response[i].OdataType != Program.appPasswordAuthMethod)
                         {
-                            await deleteMethod(response[i].Id);
-                        }
-                        catch (ODataError err)
-                        {
+                            try
+                            {
+                                await deleteMethod(response[i].Id);
+                            }
+                            catch (ODataError err)
+                            {
                                 //do nothing as exceptions are expected.
+                            }
+
                         }
-                            
-                    }
                 }
                 /******
                 ///// the more complicated method
@@ -1025,7 +1027,7 @@ namespace User_Security_Actions
             }
 
             if (successful)
-            {                 
+            {
                 //get the updated user
                 Program.user = await getUser(Program.user.UserPrincipalName);
                 printUserStatus(Program.user);
@@ -1084,7 +1086,7 @@ namespace User_Security_Actions
             Program.validUser = false;
             Program.user = null;
             Program.admin = null;
-            
+
             Form1_Load(sender, e);
         }
 
@@ -1093,7 +1095,7 @@ namespace User_Security_Actions
             var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
             modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
             modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
-            if(null != response.OdataType)
+            if (null != response.OdataType)
                 modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
 
             var options = new JsonSerializerOptions { WriteIndented = true };
@@ -1129,10 +1131,8 @@ namespace User_Security_Actions
             //6. Display the result
 
 
-
-
             //1. Get and parse the TAP method policy
-
+            string groupTAPResult;
             TemporaryAccessPassAuthenticationMethodConfiguration tapPolicy = new();
 
             try
@@ -1140,16 +1140,18 @@ namespace User_Security_Actions
                 //get the TAP method policy
                 // unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
                 // have to cast the response into TemporaryAccessPassAuthenticationMethodConfiguration
-                
-                tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration) await Program.graphClient.Policies.
-                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"]
-                       .GetAsync();
+
+                tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
+                    Program.graphClient.Policies.AuthenticationMethodsPolicy.
+                    AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
             }
             catch (Exception err)
             {
                 MessageBox.Show("Error getting TAP method policy. Please try again."
                     + "\n" + err.Message);
             }
+            
+            groupTAPResult = await checkTAPGroupMembership(tapPolicy.ExcludeTargets);
 
             //if the policy is not enabled, we stop here
             if (AuthenticationMethodState.Disabled == tapPolicy.State)
@@ -1157,14 +1159,29 @@ namespace User_Security_Actions
                 MessageBox.Show("The TAP method is not enabled in this tenant,\n"
                     + "or for this user.\n"
                     + "Please contact your administrator.");
-                
+
             }
             //if the user is excluded from the TAP method, we stop here
-            else if (false)
+            else if ("None" != groupTAPResult)
             {
-                MessageBox.Show("The user is excluded from the TAP method\n"
-                    + "due to inclusion into the group(s):\n"
-                    + "Please contact your administrator.");
+                Group graphGroup;
+                try
+                {
+                    //get the group from the group ID
+                    graphGroup = await Program.graphClient.Groups[groupTAPResult].GetAsync();
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show("Error getting TAP group information. Please try again."
+                        + "\n" + err.Message);
+                    return;
+                }
+
+                string message = "The user is excluded from the TAP method\n"
+                    + "due to inclusion into the group: " + graphGroup.DisplayName + "\n"
+                    + "Please remove them from the group to continue.\n"
+                    + "Other memberships could also exclude the user.";
+                MessageBox.Show(message);
             }
             //otherwise, the policy is enabld and the user is not excluded, we can continue
             else
@@ -1179,7 +1196,31 @@ namespace User_Security_Actions
                 new TAPForm(minimumLifetimeInMinutes, maximumLifetimeInMinutes,
                     defaultLifetimeInMinutes, isUsableOnce).ShowDialog();
             }
-               
+
+        }
+
+        private async Task<string> checkTAPGroupMembership(List<ExcludeTarget> targets)
+        {
+            //check if the user is a member of the TAP group
+            //if they are, we cannot continue
+
+            string groupId = "None";
+
+            //get the group ID from the ExcludeTarget
+            foreach (var exclusion in targets)
+            {
+                if(await MFAExtras.isMemberOfGroup(exclusion.Id))
+                {
+                    //if the user is a member of the group, we store the group ID
+                    groupId = exclusion.Id;
+
+                    //we only need one match, so we can break out of the loop
+                    break;
+                }
+            }
+
+            //return the group ID
+            return groupId;
         }
     }
 }

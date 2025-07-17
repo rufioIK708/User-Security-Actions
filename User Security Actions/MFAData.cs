@@ -252,10 +252,15 @@ namespace User_Security_Actions
 
         public static async Task<bool> isMemberOfGroup(string groupId)
         {
+            //default to false
             bool isMember = false;
+
             try
             {
+                //get the transitive group membership of the user
                 var response = await Program.graphClient.Users[Program.user.Id].TransitiveMemberOf.GetAsync();
+
+                //check if the user is a member of the group in question
                 foreach (var item in response.Value)
                 {
                     

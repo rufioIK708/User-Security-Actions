@@ -32,7 +32,8 @@ namespace User_Security_Actions
         // static variables needed by the app
         // - scopes and clientID for connecting to Entra/Graph
         public static string[] scopes = new string[] { "user.readwrite.all  User.EnableDisableAccount.All " +
-                "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All" };
+                "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All " +
+                "user.read GroupMember.Read.All"};
         public static string ClientId = "492bc3cf-c421-4332-9e96-f56547f3ed56";
 
         // - values for MFA odata.type to check for various methods and call the specific API
@@ -77,6 +78,8 @@ namespace User_Security_Actions
         [STAThread]
         static void Main()
         {
+            //System.Net.WebRequest.DefaultWebProxy = new System.Net.WebProxy("127.0.0.1", 8888);
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

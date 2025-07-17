@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graph.Beta.Models;
+using Microsoft.Graph.Beta.Models.Ediscovery;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,6 +26,9 @@ namespace User_Security_Actions
             this.numericUpDownMinutes.Value = (decimal)defaultLifetimeInMinutes;
             this.tapDatePicker.MinDate = DateTime.Now;
             this.tapTimePicker.Value = DateTime.Now;
+            
+            this.tapDatePicker.Enabled = false;
+            this.tapTimePicker.Enabled = false;
 
             //check if the TAP is usable once
             if ((bool)isUsableOnce)
@@ -38,18 +42,25 @@ namespace User_Security_Actions
 
         private async void button1_Click(object sender, EventArgs e)
         {
+            //1. Get the TAP method policy
+            //2. Modify the form to show the options
+            //3. Get the input from the user
+            //4. Generate the request from the input
+            //5. Submit the request
+            //6. Display the result
+
+
             TemporaryAccessPassAuthenticationMethod requestBody;
             this.Cursor = Cursors.WaitCursor;
 
-            //1. Copy the input from the user
-
+            //3. Copy the input from the user/form
 
             DateTime tapStartDate = tapDatePicker.Value.Date;
             TimeSpan tapStartTime = tapTimePicker.Value.TimeOfDay;
             int tapDurationInMinutes = (int)numericUpDownMinutes.Value;
             bool tapIsUsableOnce = checkBoxReUse.Checked;
 
-            //2. Generate the request from the input
+            //4. Generate the request from the input
 
             if (checkBoxPresentOrFurtureTAP.Checked)
             {
@@ -57,25 +68,28 @@ namespace User_Security_Actions
                 //so enable the date and time pickers
                 requestBody = new TemporaryAccessPassAuthenticationMethod
                 {
-                    StartDateTime = (tapStartDate.Add(tapStartTime)).ToUniversalTime(),
+                    //trying with a fixed start date/time as a test, still getting error
+                    // related to the start date/time being in the past
+                    StartDateTime = tapStartDate.Add(tapStartTime).ToUniversalTime(),
+                    //StartDateTime = DateTimeOffset.Parse("2025-07-19T12:40:00.000Z"),
                     LifetimeInMinutes = tapDurationInMinutes,
                     IsUsableOnce = tapIsUsableOnce,
                 };
             }
             else
             {
+                //creating a tap for now, StartDateTime is optional so we can leave it out
                 requestBody = new TemporaryAccessPassAuthenticationMethod
                 { 
                     LifetimeInMinutes = tapDurationInMinutes,
                     IsUsableOnce = tapIsUsableOnce,
                 };
             }
-            
 
-            //3. Submit the request
+            //5. Submit the request
             TemporaryAccessPassAuthenticationMethod tapResult = new();
 
-            //3.a - check the start date/time of the TAP request
+            //5.a - check the start date/time of the TAP request
             //MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
             try
             {
@@ -90,16 +104,40 @@ namespace User_Security_Actions
                 this.Cursor = Cursors.Default;
                 return;
             }
+
             //6. Display the result
             this.Cursor = Cursors.Default;
-            this.Close();
 
-            string mainLabel = $"You can use the TAP below starting from\n {tapStartDate.ToLongDateString()} at {tapStartTime}.\n";
+            string month;
+
+            switch (tapResult.StartDateTime.Value.Month)
+            {
+                case 1: month = "January"; break;
+                case 2: month = "February"; break;
+                case 3: month = "March"; break;
+                case 4: month = "April"; break;
+                case 5: month = "May"; break;
+                case 6: month = "June"; break;
+                case 7: month = "July"; break;
+                case 8: month = "August"; break;
+                case 9: month = "September"; break;
+                case 10: month = "October"; break;
+                case 11: month = "November"; break;
+                case 12: month = "December"; break;
+                default: month = ""; break;
+            }
+
+            //set up the strings for the message box. Use the values from the TAP result
+            string mainLabel = $"You can use the TAP below starting from\n" +
+                $"{month} {tapResult.StartDateTime.Value.Day} at " +
+                $"{tapResult.StartDateTime.Value.Hour}:{tapResult.StartDateTime.Value.Minute}.\n" +
+                $"It will be usable for {tapResult.LifetimeInMinutes} minutes";
+
             string title = "TAP Creation Result";
 
             new textInput(mainLabel, title, tapResult.TemporaryAccessPass).ShowDialog();
 
-            
+            this.Close();
 
         }
 
@@ -121,6 +159,14 @@ namespace User_Security_Actions
                 tapTimePicker.Enabled = false;
                 //labelPresentOrFutureTAP.Text = "Create a present TAP";
             }
+        }
+
+        private void tapTimePicker_ValueChanged(object sender, EventArgs e)
+        {
+            //set the label to show the selected time
+            labelTimeCheck.Text = $"Selected time: {
+                tapDatePicker.Value.Add(tapTimePicker.Value.TimeOfDay).ToUniversalTime()
+                    .ToString()}";
         }
     }
 }

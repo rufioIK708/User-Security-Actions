@@ -38,6 +38,7 @@
             this.tapTimePicker = new System.Windows.Forms.DateTimePicker();
             this.labelPresentOrFutureTAP = new System.Windows.Forms.Label();
             this.checkBoxPresentOrFurtureTAP = new System.Windows.Forms.CheckBox();
+            this.labelTimeCheck = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMinutes)).BeginInit();
             this.SuspendLayout();
             // 
@@ -119,6 +120,7 @@
             this.tapTimePicker.ShowUpDown = true;
             this.tapTimePicker.Size = new System.Drawing.Size(101, 20);
             this.tapTimePicker.TabIndex = 2;
+            this.tapTimePicker.ValueChanged += new System.EventHandler(this.tapTimePicker_ValueChanged);
             // 
             // labelPresentOrFutureTAP
             // 
@@ -140,11 +142,21 @@
             this.checkBoxPresentOrFurtureTAP.UseVisualStyleBackColor = true;
             this.checkBoxPresentOrFurtureTAP.CheckedChanged += new System.EventHandler(this.checkBoxPresentOrFurtureTAP_CheckedChanged);
             // 
+            // labelTimeCheck
+            // 
+            this.labelTimeCheck.AutoSize = true;
+            this.labelTimeCheck.Location = new System.Drawing.Point(376, 122);
+            this.labelTimeCheck.Name = "labelTimeCheck";
+            this.labelTimeCheck.Size = new System.Drawing.Size(83, 13);
+            this.labelTimeCheck.TabIndex = 10;
+            this.labelTimeCheck.Text = "labelTimeCheck";
+            // 
             // TAPForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(514, 179);
+            this.Controls.Add(this.labelTimeCheck);
             this.Controls.Add(this.checkBoxPresentOrFurtureTAP);
             this.Controls.Add(this.labelPresentOrFutureTAP);
             this.Controls.Add(this.tapTimePicker);
@@ -179,5 +191,6 @@
         private System.Windows.Forms.DateTimePicker tapTimePicker;
         private System.Windows.Forms.Label labelPresentOrFutureTAP;
         private System.Windows.Forms.CheckBox checkBoxPresentOrFurtureTAP;
+        private System.Windows.Forms.Label labelTimeCheck;
     }
 }
