@@ -219,18 +219,135 @@ namespace User_Security_Actions
             displayBox.ScrollToCaret();
         }
 
-        
+        public async void printMFAData(List<MFAData> list)
+        {
+            modifyRichTextBox("\n");
+
+            //display the number of methods
+            modifyRichTextBox($"\nNumber of AuthMehtods:  {list.Count}\n");
+
+            //loop through the list of MFA methods
+            foreach (var item in list)
+            {
+                if (null != item.OdataType)
+                {
+                    //Replace the OdataType with a more readable string
+                    switch (item.OdataType)
+                    {
+                        case Program.platformCredMethod:
+                            modifyRichTextBox($"Type of Method : Platform Credential\n");
+                            break;
+
+                        case Program.wHFBAuthMethod:
+                            modifyRichTextBox($"Type of Method : Windows Hello for Business\n");
+                            break;
+
+                        case Program.tAPAuthMethod:
+                            modifyRichTextBox($"Type of Method : Temporary Access Pass\n");
+                            break;
+
+                        case Program.softOathAuthMethod:
+                            modifyRichTextBox($"Type of Method : Software Oath Token\n");
+                            break;
+
+                        case Program.phoneAuthMethod:
+                            modifyRichTextBox($"Type of Method : Phone Authentication\n");
+                            try
+                            {
+                                var result = await Program.graphClient.Users[Program.user.Id].Authentication.
+                                    PhoneMethods[item.Id].GetAsync();
+                                modifyRichTextBox($"Phone number   : {result.PhoneNumber}\n");
+                                modifyRichTextBox($"Phone type     : {result.PhoneType}\n");
+                                modifyRichTextBox($"SMS SignInState: {result.SmsSignInState}\n");
+                            }
+                            catch (Exception err)
+                            {
+                                modifyRichTextBox("\nError getting phone method. Please try again.\n"
+                                    + "\n" + err.Message);
+                            }
+                            break;
+
+                        case Program.passwordAuthMethod:
+                            modifyRichTextBox($"Type of Method : Password\n");
+                            break;
+
+                        case Program.mSAuthenticatorAuthMethod:
+                            modifyRichTextBox($"Type of Method : Microsoft Authenticator\n");
+                            break;
+
+                        case Program.hardOathAuthMethod:
+                            modifyRichTextBox($"Type of Method : Hardware Oath Token\n");
+                            break;
+
+                        case Program.fido2AuthMethod:
+                            modifyRichTextBox($"Type of Method : Fido2 Passkey\n");
+                            break;
+
+                        case Program.emailAuthMethod:
+                            modifyRichTextBox($"Type of Method : Alternate E-Mail\n");
+                            break;
+
+                        //these are no longer listed but are still included just in case
+                        case Program.phoneAppNotificationAuthMethhod:
+                            modifyRichTextBox($"Type of Method : Phone App Notification\n");
+                            break;
+
+                        case Program.appPasswordAuthMethod:
+                            modifyRichTextBox($"Type of Method : App Password\n");
+                            break;
+
+                        case Program.phoneAppOTPAuthMethod:
+                            modifyRichTextBox($"Type of Method : Phone App OTP\n");
+                            break;
+
+                        case Program.passwordlessMSAuthenticatorMethod:
+                            modifyRichTextBox($"Type of Method : Passwordless Microsoft Authenticator\n");
+                            break;
+
+
+                        //incase we get a new method type
+                        default:
+                            modifyRichTextBox($"Type of Method : {item.OdataType}\n");
+                            break;
+                    }
+                }
+
+                //check if the rest of the properties are null before attempting to display
+                if (null != item.Id)
+                    modifyRichTextBox($"ID             : {item.Id}\n");
+                if (null != item.CreatedDateTime)
+                    modifyRichTextBox($"CreatedDateTime: {item.CreatedDateTime}\n");
+                if (null != item.AdditionalData)
+                {
+                    foreach (var entry in item.AdditionalData)
+                    {
+                        modifyRichTextBox($"Additional Data: {entry.Key}: {entry.Value}\n");
+                    }
+                }
+                if (null != item.BackingStore)
+                {
+                    foreach (var entry in item.BackingStore)
+                    {
+                        modifyRichTextBox($"Backing Store: {entry.Key}: {entry.Value}\n");
+                    }
+                }
+
+                modifyRichTextBox(Environment.NewLine);
+            }
+        }
+
 
         //method to get and print the authetication methods for a user
         public async Task<List<AuthenticationMethod>> getAndPrintMFA(bool print)
         {
+
             string defaultMethod;
 
             Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
             var methods = await MFAExtras.getUserMfaMethods();
             defaultMethod = await MFAExtras.getRegistrationAuthData(print);
-            
+
             if (null != methods && print)
                 MFAExtras.printMFAData(methods, defaultMethod);
 
@@ -626,6 +743,7 @@ namespace User_Security_Actions
             MFAData passwordMethod = new MFAData();
 
             foreach (var authenticationMethod in methods)
+
             {
                 if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
                 {
@@ -901,6 +1019,7 @@ namespace User_Security_Actions
                             {
                                 //do nothing as exceptions are expected.
                                 //MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
+
                             }
 
                         }
@@ -995,24 +1114,19 @@ namespace User_Security_Actions
             /* - the list of static variables to use as reference for what needs to be cleared.
              *         public static InteractiveBrowserCredential token;
              *         public static GraphServiceClient graphClient; 
-             *         // - - string to read input from users
+                       // - - string to read input from users
              *         public static string input;
 
-             *         // - - bools to track the state of the app
+                       // - - bools to track the state of the app
              *         public static bool signedIn = false;
              *         public static bool validUser = false;
-             *         // - - - might be needed to cleaner password reset alternative in the future
-             *         public static bool existPhoneMethods = false;
                         // - - users to store the user and admin details
-                        public static Microsoft.Graph.Beta.Models.User user;
-                        public static Microsoft.Graph.Beta.Models.User admin;
+             *          public static Microsoft.Graph.Beta.Models.User user;
+             *          public static Microsoft.Graph.Beta.Models.User admin;
                         // enumerators for phone method storage when we create them.  
                         public static PhoneOption phoneOptions;
                         public static MethodType methodType;
-                        // - - - TAP method details
-                        public static DateTime tapStart;
-                        public static int tapDurationInMinutes;
-                        public static bool tapReusable;
+                      
             */
             //Program.graphClient.
             Program.token = null;
@@ -1020,9 +1134,9 @@ namespace User_Security_Actions
             Program.input = null;
             Program.signedIn = false;
             Program.validUser = false;
-            Program.existPhoneMethods = false;
             Program.user = null;
             Program.admin = null;
+
             displayBox.Clear();
             modifyRichTextBox("Just for reference");
             
@@ -1031,8 +1145,13 @@ namespace User_Security_Actions
 
         private async void buttonFunctions_Click(object sender, EventArgs e)
         {
-            var response = await Program.graphClient.Users[Program.user.Id].Authentication.Methods.GetAsync();
-            var methods = response.Value;
+
+            var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
+            modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
+            modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
+            if (null != response.OdataType)
+                modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
+
 
             for(int i = 0; i < methods.Count; i++)
             {
@@ -1123,73 +1242,29 @@ namespace User_Security_Actions
 
         private async void buttonAddTapMethod_Click(object sender, EventArgs e)
         {
-            //1. Get and parse the TAP method policy
+            //1. Get the TAP method policy
             //2. Modify the form to show the options
             //3. Get the input from the user
             //4. Generate the request from the input
             //5. Submit the request
             //6. Display the result
-            AuthenticationMethodConfiguration tapPolicy = new();
-
 
 
             //1. Get and parse the TAP method policy
+            string groupTAPResult;
+            TemporaryAccessPassAuthenticationMethodConfiguration tapPolicy = new();
+
             try
             {
-                //var response = await Program.graphClient.Policies.
-                //    AuthenticationMethodsPolicy.GetAsync();
-
                 //get the TAP method policy
-                //unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
-                //makes it impossible to generate a UI that the required restraints.
-                //trying to select 'AdditionalProperties' but it doesn't work
-                //var result = await Program.graphClient.Policies.
-                //    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"].
-                //       GetAsync((requestConfiguration) =>
-                //        {
-                //           requestConfiguration.QueryParameters.Select = new[] { "AdditionalProperties" };
-                //        });
-
-                //get the TAP method policy
-                tapPolicy = await Program.graphClient.Policies.
-                    AuthenticationMethodsPolicy.AuthenticationMethodConfigurations["TemporaryAccessPass"]
-                       .GetAsync();
-
-                //serialize the response - useful for debugging and seeing the data
-                //var options = new JsonSerializerOptions { WriteIndented = true };
-                //string jsonString = JsonSerializer.Serialize(tapPolicy, options);
-
-                //testing by gathering the entire policy, not just the TAP method
-                //var test = Program.graphClient.Policies.AuthenticationMethodsPolicy.GetAsync();
-                //string jsonStringAuthPolicy = JsonSerializer.Serialize(test.Result.AuthenticationMethodConfigurations, options);
-
-                MessageBox.Show("able to serialize second string");
-
-                if (0 == result.State)
-                {
-                    modifyRichTextBox("\nTAP method is enabled.");
-                    modifyRichTextBox("\n" + jsonString);
-                    foreach (var item in test.Result.AuthenticationMethodConfigurations)
-                    {
-                        var jsonOut = JsonSerializer.Serialize(item.AdditionalData, options);
-                        modifyRichTextBox($"\n{jsonOut}");
-                    }
-                    modifyRichTextBox("\n" + test.Result.AuthenticationMethodConfigurations[0]);
-                }
-                else
-                {
-                    MessageBox.Show("You do not have this method configured for your tenant. " +
-                        "\nPlease configure it in the Entra Portal.");
-                }
+                // unable to get the values for defaultlifetimeinminutes, defaultlength,
+                // maximumlifetimeinminutes, etc have to cast the response into
+                // TemporaryAccessPassAuthenticationMethodConfiguration
 
 
-                //MessageBox.Show("able to serialize second string");
-                //foreach (var item in test.Result.AuthenticationMethodConfigurations)
-                //{
-                //    var jsonOut = JsonSerializer.Serialize(item.AdditionalData, options);
-                //    modifyRichTextBox($"\n{jsonOut}");
-                //}
-                //modifyRichTextBox("\n" + test.Result.AuthenticationMethodConfigurations[0]);
+                tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
+                    Program.graphClient.Policies.AuthenticationMethodsPolicy.
+                    AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
 
             }
             catch (Exception err)
@@ -1197,32 +1272,78 @@ namespace User_Security_Actions
                 MessageBox.Show("Error getting TAP method policy. Please try again."
                     + "\n" + err.Message);
             }
+            
+            groupTAPResult = await checkTAPGroupMembership(tapPolicy.ExcludeTargets);
 
             //if the policy is not enabled, we stop here
-            if (0 != tapPolicy.State)
+            if (AuthenticationMethodState.Disabled == tapPolicy.State)
             {
                 MessageBox.Show("The TAP method is not enabled in this tenant,\n"
                     + "or for this user.\n"
                     + "Please contact your administrator.");
-                return;
+
+            }
+            //if the user is excluded from the TAP method, we stop here
+            else if ("None" != groupTAPResult)
+            {
+                Group graphGroup;
+                try
+                {
+                    //get the group from the group ID
+                    graphGroup = await Program.graphClient.Groups[groupTAPResult].GetAsync();
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show("Error getting TAP group information. Please try again."
+                        + "\n" + err.Message);
+                    return;
+                }
+
+                string message = "The user is excluded from the TAP method\n"
+                    + "due to inclusion into the group: " + graphGroup.DisplayName + "\n"
+                    + "Please remove them from the group to continue.\n"
+                    + "Other memberships could also exclude the user.";
+                MessageBox.Show(message);
             }
             //otherwise, the policy is enabld and the user is not excluded, we can continue
+            else
+            {
+                //2. Modify the form to show the options
+                int? defaultLength = tapPolicy.DefaultLength;
+                int? defaultLifetimeInMinutes = tapPolicy.DefaultLifetimeInMinutes;
+                int? maximumLifetimeInMinutes = tapPolicy.MaximumLifetimeInMinutes;
+                int? minimumLifetimeInMinutes = tapPolicy.MinimumLifetimeInMinutes;
+                bool? isUsableOnce = tapPolicy.IsUsableOnce;
 
-            //2. Modify the form to show the options
+                new TAPForm(minimumLifetimeInMinutes, maximumLifetimeInMinutes,
+                    defaultLifetimeInMinutes, isUsableOnce).ShowDialog();
+            }
 
-            //3. Get the input from the user
-            //4. Generate the request from the input
-            //5. Submit the request
-            //6. Display the result
-            // the below would be set from tapPolicy.* but the values are not being returned
-            int defaultLength = 8;
-            int defaultLifetimeInMinutes = 60;
-            int maximumLifetimeInMinutes = 480;
-            int minimumLifetimeInMinutes = 60;
-            bool isUsableOnce = false;
+        }
 
-            new TAPForm(minimumLifetimeInMinutes,maximumLifetimeInMinutes,defaultLifetimeInMinutes).ShowDialog();
+        private async Task<string> checkTAPGroupMembership(List<ExcludeTarget> targets)
+        {
+            //check if the user is a member of the TAP group
+            //if they are, we cannot continue
 
+            string groupId = "None";
+
+            //get the group ID from the ExcludeTarget
+            foreach (var exclusion in targets)
+            {
+                if(await MFAExtras.isMemberOfGroup(exclusion.Id))
+                {
+                    //if the user is a member of the group, we store the group ID
+                    groupId = exclusion.Id;
+
+
+                    //we only need one match, so we can break out of the loop
+                    break;
+                }
+            }
+
+            //return the group ID
+            return groupId;
         }
     }
 }

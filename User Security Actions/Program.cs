@@ -34,7 +34,9 @@ namespace User_Security_Actions
         // static variables needed by the app
         // - scopes and clientID for connecting to Entra/Graph
         public static string[] scopes = new string[] { "user.readwrite.all  User.EnableDisableAccount.All " +
-                "UserAuthenticationMethod.ReadWrite UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All" };
+                "UserAuthenticationMethod.ReadWrite.All User.RevokeSessions.All Auditlog.Read.All Policy.Read.All " +
+                "user.read GroupMember.Read.All"};
+
         public static string ClientId = "492bc3cf-c421-4332-9e96-f56547f3ed56";
 
         // - values for MFA odata.type to check for various methods and call the specific API
@@ -68,18 +70,14 @@ namespace User_Security_Actions
         public static bool signedIn = false;
         public static bool validUser = false;
         public static bool cancelled = false;
-        // - - - might be needed to cleaner password reset alternative in the future
-        public static bool existPhoneMethods = false;
+       
         // - - users to store the user and admin details
         public static Microsoft.Graph.Beta.Models.User user;
         public static Microsoft.Graph.Beta.Models.User admin;
         // enumerators for phone method storage for adding new security methods.  
         public static PhoneOption phoneOptions;
         public static MethodType methodType;
-        // - - - TAP method details
-        public static DateTime tapStart;
-        public static int tapDurationInMinutes;
-        public static bool tapReusable;
+       
 
 
         // - - main form for the app, this is used to show the UI and interact with the user
@@ -88,6 +86,9 @@ namespace User_Security_Actions
         [STAThread]
         static void Main()
         {
+
+            //System.Net.WebRequest.DefaultWebProxy = new System.Net.WebProxy("127.0.0.1", 8888);
+
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 
