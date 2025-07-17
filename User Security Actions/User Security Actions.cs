@@ -1,31 +1,37 @@
-﻿using System;
+﻿using Azure;
+using Azure.Identity;
+using Microsoft.Graph.Beta;
+using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
+using Microsoft.Graph.Beta.Models;
+//using Microsoft.Graph.Beta.Models.Networkaccess;
+using Microsoft.Graph.Beta.Models.ODataErrors;
+using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
+using Microsoft.Kiota.Abstractions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
-using System.Windows.Forms;
-using System.Windows.Input;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.Xml;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Azure.Identity;
-using Microsoft.Graph.Beta;
-using Microsoft.Graph.Beta.Models;
-using Microsoft.Graph.Beta.Models.ODataErrors;
-using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
+using System.Windows.Forms;
+using System.Windows.Input;
 using User_Security_Actions;
 using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
 using Microsoft.Kiota.Abstractions;
 using static System.Net.Mime.MediaTypeNames;
 
 
+
 namespace User_Security_Actions
 {
-
 
     public partial class Form1 : Form
     {
@@ -131,21 +137,51 @@ namespace User_Security_Actions
             //make some space
             modifyRichTextBox("\n");
 
-            //confirm values queried are not null
+            //confirm values queried are not null before printing, print NULL if they are
+            //DisplayName
+            modifyRichTextBox("\nDisplayName:            ");
             if (null != user.DisplayName)
-                modifyRichTextBox("\nDisplayName:            " + user.DisplayName);
+                modifyRichTextBox(user.DisplayName);
+            else
+                modifyRichTextBox("NULL");
+            //UserPrincipalName
+            modifyRichTextBox("\nUserPrincipalName:      ");
             if (null != user.UserPrincipalName)
-                modifyRichTextBox("\nUserPrincipalName:      " + user.UserPrincipalName);
+                modifyRichTextBox(user.UserPrincipalName);
+            else
+                modifyRichTextBox("NULL");
+            //UserID
+            modifyRichTextBox("\nUserID:                 ");
             if (null != user.Id)
-                modifyRichTextBox("\nObjectId:               " + user.Id);
+                modifyRichTextBox(user.Id);
+            else
+                modifyRichTextBox("NULL");
+            //Account Enabled
+            modifyRichTextBox("\nAccountEnabled:         ");
             if (null != user.AccountEnabled)
-                modifyRichTextBox("\nAccount enabled:        " + user.AccountEnabled);
+                modifyRichTextBox(user.AccountEnabled.ToString());
+            else
+                modifyRichTextBox("NULL");
+            //OnPremises Immutable ID
+            modifyRichTextBox("\nOnPremisesImmutableId:  ");
             if (null != user.OnPremisesImmutableId)
-                modifyRichTextBox("\nOnPremisesImmutableId:  " + user.OnPremisesImmutableId);
+                modifyRichTextBox(user.OnPremisesImmutableId);
+            else
+                modifyRichTextBox("NULL");
+            //Password Policies
+            modifyRichTextBox("\nPasswordPolicies:       ");
             if (null != user.PasswordPolicies)
-                modifyRichTextBox("\nPasswordPolicies:       " + user.PasswordPolicies);
+                modifyRichTextBox(  user.PasswordPolicies);
+            else
+                modifyRichTextBox("NULL");
+            //Refresh Tokens Valid From Date Time
+            modifyRichTextBox("\nRefreshTokensValidFrom: ");
             if (null != user.RefreshTokensValidFromDateTime)
-                modifyRichTextBox("\nRefreshTokensValidFrom: " + user.RefreshTokensValidFromDateTime);
+                modifyRichTextBox(user.RefreshTokensValidFromDateTime.ToString());
+            else
+                modifyRichTextBox("NULL");
+
+
 
         }
 
@@ -180,6 +216,7 @@ namespace User_Security_Actions
         public void modifyRichTextBox(string message)
         {
             displayBox.AppendText(message);
+            displayBox.ScrollToCaret();
         }
 
         public async void printMFAData(List<MFAData> list)
@@ -299,55 +336,24 @@ namespace User_Security_Actions
             }
         }
 
+
         //method to get and print the authetication methods for a user
-        public async Task<List<MFAData>> getAndPrintMFA(bool print)
+        public async Task<List<AuthenticationMethod>> getAndPrintMFA(bool print)
         {
 
+            string defaultMethod;
 
-            if (await MFAExtras.isTenantPremium())
-            {
-                try
-                {
+            Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
-                    //to verify the raw output
-                    modifyRichTextBox("\n" + await MFAExtras.getRegistrationAuthData());
-                }
-                catch (ODataError err)
-                {
-                    MessageBox.Show(err.Message + "\nError getting advancded MFA details: confirm P1 license");
-                }
-            }
-
-
-
-            //get the MFA methods for the user
-            var response = await MFAExtras.getUserMfaMethods();
-
-            //serialize the response
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(response.Value, options);
-
-            //to verify the raw output
-            //modifyRichTextBox("\n" + jsonString);
-
-            //initialize a list of MFAData
-            var methods = new List<MFAData>();
-
-            //deserialize the JSON
-            try
-            {
-                methods = JsonSerializer.Deserialize<List<MFAData>>(jsonString);
-            }
-            catch (JsonException e)
-            {
-                MessageBox.Show("Error converting JSON\n" +
-                "error: " + e.Message + "\nadditional info : " + e.Data);
-            }
-
+            var methods = await MFAExtras.getUserMfaMethods();
+            defaultMethod = await MFAExtras.getRegistrationAuthData(print);
 
             if (null != methods && print)
-                printMFAData(methods);
+                MFAExtras.printMFAData(methods, defaultMethod);
 
+            Form1.ActiveForm.Cursor = Cursors.Default;
+
+            //return the list of methods
             return methods;
         }
 
@@ -355,183 +361,190 @@ namespace User_Security_Actions
         public async Task deleteMethod(string id)
         {
             bool successful = false;
-            var MFAList = await getAndPrintMFA(false);
+            bool print = false;
+
+            var MFAList = await getAndPrintMFA(print);
 
             var method = MFAList.Find(x => x.Id == id);
             //verify the input & act: remove the method or no action
-            foreach (var item in MFAList)
+        
+            //find the Id provided in the ID of authentication methods
+            if (method.Id == id)
             {
-                //find the Id provided in the ID of authentication methods
-                if (item.Id == id)
+                modifyRichTextBox($"\n \nRemoving method: {method.OdataType} with ID: {method.Id}\n");
+
+                switch (method.OdataType)
                 {
-                    modifyRichTextBox($"\n \nRemoving method: {item.OdataType} with ID: {item.Id}\n");
+                    //WHFB method
+                    case Program.wHFBAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                WindowsHelloForBusinessMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //TAP method
+                    case Program.tAPAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                TemporaryAccessPassMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //software Oath method
+                    case Program.softOathAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                SoftwareOathMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //platform credential
+                    case Program.platformCredMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                PlatformCredentialMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Phone number-based methods ( mobile, alternamteMobile, & office)
+                    case Program.phoneAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                PhoneMethods[method.Id].DeleteAsync();
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Password method - can't be done, let them know
+                    case Program.passwordAuthMethod:
+                        MessageBox.Show("You cannot delete passwords at this time.");
+                        break;
+                    //MS Authenticator app method
+                    case Program.mSAuthenticatorAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                MicrosoftAuthenticatorMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Hardware Oath token method
+                    case Program.hardOathAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                HardwareOathMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Fido 2 Method
+                    case Program.fido2AuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                Fido2Methods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //Alternate email method
+                    case Program.emailAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                EmailMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+                    //this is old and shouldn't be used but it's here for completeness
+                    case Program.phoneAppNotificationAuthMethhod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                MicrosoftAuthenticatorMethods[method.Id].DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
 
-                    switch (item.OdataType)
-                    {
-                        //WHFB method
-                        case Program.wHFBAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    WindowsHelloForBusinessMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //TAP method
-                        case Program.tAPAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    TemporaryAccessPassMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //software Oath method
-                        case Program.softOathAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    SoftwareOathMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //platform credential
-                        case Program.platformCredMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PlatformCredentialMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Phone number-based methods ( mobile, alternamteMobile, & office)
-                        case Program.phoneAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PhoneMethods[item.Id].DeleteAsync();
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Password method - can't be done, let them know
-                        case Program.passwordAuthMethod:
-                            MessageBox.Show("You cannot delete passwords at this time.");
-                            break;
-                        //MS Authenticator app method
-                        case "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod":
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    MicrosoftAuthenticatorMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Hardware Oath token method
-                        case Program.hardOathAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    HardwareOathMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Fido 2 Method
-                        case Program.fido2AuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    Fido2Methods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //Alternate email method
-                        case Program.emailAuthMethod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    EmailMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
-                        //this is old and shouldn't be used but it's here for completeness
-                        case Program.phoneAppNotificationAuthMethhod:
-                            try
-                            {
-                                await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    MicrosoftAuthenticatorMethods[item.Id].DeleteAsync();
-                                successful = true;
-                            }
-                            catch (ODataError err)
-                            {
-                                MessageBox.Show(err.Message + "\nError removing method: try again");
-                            }
-                            break;
+                    case Program.appPasswordAuthMethod:
+                        MessageBox.Show("Cannot remove App Passwords from here. My apologies.\n"
+                            + "Please do so from the Entra portal");
+                        break;
 
-                        case Program.appPasswordAuthMethod:
-                            MessageBox.Show("Cannot remove App Passwords from here. My apologies.\n"
-                                + "Please do so from the Entra portal");
-                            break;
-
-                        default:
-                            //we shouldn't get here, the list is all inclusive... not sure what to do here...
-                            //throw an exception? error message?
-                            break;
-                    }
-
-
+                    default:
+                        //we shouldn't get here, the list is all inclusive... not sure what to do here...
+                        //throw an exception? error message?
+                        break;
                 }
 
 
-                if (successful)
-                {
-                    // if we leave the loop, no match was found
-                    MessageBox.Show("Method " + Program.input + " deleted.");
-                }
+            }
+
+
+            if (successful)
+            {
+                // if we leave the loop, no match was found
+                MessageBox.Show("Method " + Program.input + " deleted.");
             }
         }
         private async void getUserMFA_Click(object sender, EventArgs e)
         {
+            bool print = true;
             modifyRichTextBox("\n\nGetting MFA methods for user: " + Program.user.DisplayName + "\n\n");
-            await getAndPrintMFA(true);
-
-            //get registration info for the user
-            //string regData = await MFAExtras.getRegistrationAuthData();
-            //modifyRichTextBox("\n\n================REGISTRATION DATA=======================\n\n" + regData);
+            await getAndPrintMFA(print);
 
         }
 
@@ -590,57 +603,69 @@ namespace User_Security_Actions
             bool result = false;
             new textInput("Please enter the ObjectID/UPN of a user", "Select a User", false).ShowDialog();
 
-            //try to get the user
-            try
+            //copy input to new var
+            var input = Program.input;
+            Program.input = null;
+
+            if (!Program.cancelled)
             {
-                Program.user = await getUser(Program.input);
+                //try to get the user
+                try
+                {
+                    Program.user = await getUser(input);
 
+                }
+                catch (ODataError err)
+                {
+                    MessageBox.Show(err.Error + "\nError getting user: try again"
+                        + "\nResult is: " + result.ToString());
+                    result = false;
+                    //throw err;
+
+                }
+
+                //if UPN is not null, we successfully got a user
+                if (null != Program.user.UserPrincipalName)
+                    result = true;
+
+                /**********************
+                 * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
+                 * However, when calling Graph API, you are able to perform these actions on yourself.
+                 * This check is not neccessary, we'll let the API let us know when we are doing something we
+                 * shouldn't be, for now.
+
+                if (Program.admin.Id == Program.user.Id)
+                {
+                    MessageBox.Show("This app is intended to make administrator changes." +
+                        "\nYou cannot make admnistrator changes on your own account." +
+                        "\nPlease select a different user");
+                    result = false;
+                }
+                *******************************/
+
+                //if user was found successfully
+                if (result)
+                {
+                    modifyRichTextBox("\n\nUser found: ");
+                    printUserStatus(Program.user);
+                    //getAndPrintMFA(app, upn);
+                    labelSelectedUser.Text = "The selected user is: " + Program.user.DisplayName;
+                }
+                //user was not found successfully
+                else
+                    modifyRichTextBox("\n\nUser not found!");
+
+                //update environment var with user status
+                Program.validUser = result;
+
+                //refresh the form
+                Form1_Load(sender, e);
             }
-            catch (ODataError err)
-            {
-                MessageBox.Show(err.Error + "\nError getting user: try again"
-                    + "\nResult is: " + result.ToString());
-                result = false;
-                //throw err;
-
-            }
-
-            //if UPN is not null, we successfully got a user
-            if (null != Program.user.UserPrincipalName)
-                result = true;
-
-            /**********************
-             * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
-             * However, when calling Graph API, you are able to perform these actions on yourself.
-             * This check is not neccessary, we'll let the API let us know when we are doing something we
-             * shouldn't be, for now.
-             
-            if (Program.admin.Id == Program.user.Id)
-            {
-                MessageBox.Show("This app is intended to make administrator changes." +
-                    "\nYou cannot make admnistrator changes on your own account." +
-                    "\nPlease select a different user");
-                result = false;
-            }
-            *******************************/
-
-            //if user was found successfully
-            if (result)
-            {
-                modifyRichTextBox("\n\nUser found: ");
-                printUserStatus(Program.user);
-                //getAndPrintMFA(app, upn);
-                labelSelectedUser.Text = "The selected user is: " + Program.user.DisplayName;
-            }
-            //user was not found successfully
             else
-                modifyRichTextBox("\n\nUser not found!");
-
-            //update environment var with user status
-            Program.validUser = result;
-
-            //refresh the form
-            Form1_Load(sender, e);
+            {
+                //reset cancelled state
+                Program.cancelled = false;
+            }
         }
 
         private async void updateImmutableId_Click(object sender, EventArgs e)
@@ -687,8 +712,11 @@ namespace User_Security_Actions
             //the active user is stored in Program.user and is accessible here
 
             //need to get the authentication methods and isolate the password method & its ID
-            var response = await MFAExtras.getUserMfaMethods();
+            //var response = await MFAExtras.getUserMfaMethods();
+            var methods = await MFAExtras.getUserMfaMethods();
 
+            var passwordMethod = methods.Find(x => x.OdataType == Program.passwordAuthMethod);
+            /*****
             //serialize the response
             var options = new JsonSerializerOptions { WriteIndented = true };
             string jsonString = JsonSerializer.Serialize(response.Value, options);
@@ -709,11 +737,13 @@ namespace User_Security_Actions
                 MessageBox.Show("Error converting JSON\n" +
                 "error: " + err.Message + "\nadditional info : " + err.Data);
             }
+            
 
             //isolate the password method
             MFAData passwordMethod = new MFAData();
 
-            foreach (MFAData authenticationMethod in methods)
+            foreach (var authenticationMethod in methods)
+
             {
                 if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
                 {
@@ -721,6 +751,8 @@ namespace User_Security_Actions
                     break;
                 }
             }
+            *****/
+
             //label to show the message
             string labelMessage = "Reset the password for: " + Program.user.DisplayName;
             labelMessage += "\n\nPlease enter the new password, " +
@@ -729,8 +761,11 @@ namespace User_Security_Actions
             string resetMessage = "\nThe user will have to use this \npassword to reset their password on \nnext login.";
             new textInput(labelMessage, "Reset Password", false).ShowDialog();
 
+            string input = Program.input.Trim();
+            Program.input = null;
+            
             //verify the input & act: reset the password or no action
-            switch (Program.input.ToUpper())
+            switch (input.ToUpper())
             {
                 case ("CANCEL"):
                     break;
@@ -808,102 +843,113 @@ namespace User_Security_Actions
             string labelMessage = "Please select Phone or Email.";
             new textInput(labelMessage, "Add Authentication Method", true).ShowDialog();
 
-            //trim the input
-            string input = Program.input.Trim();
-
-            //check if email method and add.
-            if (Program.methodType == MethodType.Email)
+            //check if the user cancelled
+            if (!Program.cancelled)
             {
-                var requestBody = new EmailAuthenticationMethod
+                //trim the input
+                string input = Program.input.Trim();
+
+                //check if email method and add.
+                if (Program.methodType == MethodType.Email)
                 {
-                    EmailAddress = input,
-                };
-                try
-                {
-                    var result = await Program.graphClient.Users[Program.user.Id].
-                        Authentication.EmailMethods.PostAsync(requestBody);
-                    MessageBox.Show("Email method saved.\nMethod ID: " + result.Id);
+                    var requestBody = new EmailAuthenticationMethod
+                    {
+                        EmailAddress = input,
+                    };
+                    try
+                    {
+                        var result = await Program.graphClient.Users[Program.user.Id].
+                            Authentication.EmailMethods.PostAsync(requestBody);
+                        MessageBox.Show("Email method saved.\nMethod ID: " + result.Id);
+                    }
+                    catch (Exception err)
+                    {
+                        MessageBox.Show("Error adding phone method. Please try again."
+                            + "\nError Message: " + err.Message);
+                    }
                 }
-                catch (Exception err)
+                else
                 {
-                    MessageBox.Show("Error adding phone method. Please try again."
-                        + "\nError Message: " + err.Message);
+                    switch (Program.phoneOptions)
+                    {
+                        case PhoneOption.Mobile:
+                            //add the phone method
+                            var requestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.Mobile,
+                            };
+
+                            //submit add request
+                            try
+                            {
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(requestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding phone method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+
+                        case PhoneOption.AlternateMobile:
+                            //add the alternate mobile method
+                            var altRequestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.AlternateMobile,
+                            };
+                            //submit add request
+                            try
+                            {
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(altRequestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding alternate mobile method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+
+                        case PhoneOption.Office:
+                            //add the office method
+                            var officeRequestBody = new PhoneAuthenticationMethod
+                            {
+                                PhoneNumber = input,
+                                PhoneType = AuthenticationPhoneType.Office,
+                            };
+                            //submit add request
+                            try
+                            {
+
+                                var result = await Program.graphClient.Users[Program.user.Id].
+                                    Authentication.PhoneMethods.PostAsync(officeRequestBody);
+                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
+                            }
+                            catch (Exception err)
+                            {
+                                MessageBox.Show("Error adding office method. Please try again."
+                                    + "\n" + err.Message);
+                            }
+                            break;
+                    }
                 }
             }
             else
             {
-                switch (Program.phoneOptions)
-                {
-                    case PhoneOption.Mobile:
-                        //add the phone method
-                        var requestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.Mobile,
-                        };
-
-                        //submit add request
-                        try
-                        {
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(requestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding phone method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-
-                    case PhoneOption.AlternateMobile:
-                        //add the alternate mobile method
-                        var altRequestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.AlternateMobile,
-                        };
-                        //submit add request
-                        try
-                        {
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(altRequestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding alternate mobile method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-
-                    case PhoneOption.Office:
-                        //add the office method
-                        var officeRequestBody = new PhoneAuthenticationMethod
-                        {
-                            PhoneNumber = input,
-                            PhoneType = AuthenticationPhoneType.Office,
-                        };
-                        //submit add request
-                        try
-                        {
-
-                            var result = await Program.graphClient.Users[Program.user.Id].
-                                Authentication.PhoneMethods.PostAsync(officeRequestBody);
-                            MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                        }
-                        catch (Exception err)
-                        {
-                            MessageBox.Show("Error adding office method. Please try again."
-                                + "\n" + err.Message);
-                        }
-                        break;
-                }
+                //don't do anything and reset cancelled state
+                Program.cancelled = false;
             }
         }
+       
 
         private async void buttonResetMFA_Click(object sender, EventArgs e)
         {
+            bool print = false;
             //the active user is stored in Program.user and is accessible here
 
             //there are two methods to reset MFA, either by removing all methods or callin
@@ -915,7 +961,7 @@ namespace User_Security_Actions
 
             /****** its not working
             try
-            {
+            {++++++++++++++++++++++++
                 var response = Program.graphClient.
                 "https://graph.microsoft.com/beta/users/" + Program.user.Id +
                 "/authentication/methods/resetTraditionalAuthenticationMethods").
@@ -937,10 +983,11 @@ namespace User_Security_Actions
             //gather all methods, then remove only the MFA ones (exclude password, email, and security questions.)
 
             //get all the methods and store
-            var response = await getAndPrintMFA(true);
-            string defaultMethod = "";
+            var response = await getAndPrintMFA(print);
+            string defaultMethod;
             string[] phoneMethods = { };
             int count = 0;
+            
 
             //make sure the output isnt null (it should never be as everyone should always have
             //at least a password)
@@ -971,6 +1018,8 @@ namespace User_Security_Actions
                             catch (ODataError err)
                             {
                                 //do nothing as exceptions are expected.
+                                //MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
+
                             }
 
                         }
@@ -986,9 +1035,9 @@ namespace User_Security_Actions
                         response[i].OdataType != Program.emailAuthMethod &&
                         response[i].OdataType != Program.appPasswordAuthMethod)
                     {
-                        if (response[i].OdataType == Program.phoneAuthMethod)
+                        if (response[i].isDefault(await MFAExtras.getRegistrationAuthData(false)))
                         {
-                            phoneMethods[count] = response[i].Id;
+                            defaultMethod = response[i].Id;
                             count++;
                         }
                         else
@@ -997,7 +1046,7 @@ namespace User_Security_Actions
                 }
                 //reset the default method
                 await deleteMethod(defaultMethod);
-                ******************************************************************/
+                //**************************************/
             }
 
 
@@ -1042,19 +1091,20 @@ namespace User_Security_Actions
         private async void buttonRegisterFido2Passkey_Click(object sender, EventArgs e)
         {
             WebauthnCredentialCreationOptions response = new();
+
             try
             {
                 response = await Program.graphClient.Users[Program.user.Id].
                     Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes.
                     GetAsync(static (requestConfiguration) =>
                     {
-                        requestConfiguration.QueryParameters.ChallengeTimeoutInMinutes = 10;
+                        requestConfiguration.QueryParameters.ChallengeTimeoutInMinutes = 5;
                     });
             }
             catch (Exception err)
             {
                 MessageBox.Show("Error registering Fido2 Passkey. Please try again."
-                    + "\n" + err.Message);
+                    + "\n" + err.InnerException);
             }
         }
 
@@ -1087,21 +1137,90 @@ namespace User_Security_Actions
             Program.user = null;
             Program.admin = null;
 
+            displayBox.Clear();
+            modifyRichTextBox("Just for reference");
+            
             Form1_Load(sender, e);
         }
 
         private async void buttonFunctions_Click(object sender, EventArgs e)
         {
+
             var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
             modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
             modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
             if (null != response.OdataType)
                 modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
 
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(response, options);
 
-            modifyRichTextBox("\n" + jsonString);
+            for(int i = 0; i < methods.Count; i++)
+            {
+                if( Program.mSAuthenticatorAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    MicrosoftAuthenticatorAuthenticationMethod item = (MicrosoftAuthenticatorAuthenticationMethod)methods[i];
+                    
+                }
+                else if (Program.fido2AuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    Fido2AuthenticationMethod item = (Fido2AuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.hardOathAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    HardwareOathAuthenticationMethod item = (HardwareOathAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.softOathAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    SoftwareOathAuthenticationMethod item = (SoftwareOathAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.phoneAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PhoneAuthenticationMethod item = (PhoneAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.passwordAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PasswordAuthenticationMethod item = (PasswordAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.tAPAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    TemporaryAccessPassAuthenticationMethod item = (TemporaryAccessPassAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.platformCredMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    PlatformCredentialAuthenticationMethod item = (PlatformCredentialAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.wHFBAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    WindowsHelloForBusinessAuthenticationMethod item = (WindowsHelloForBusinessAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else if (Program.emailAuthMethod == methods[i].OdataType)
+                {
+                    //get the method ID
+                    EmailAuthenticationMethod item = (EmailAuthenticationMethod)methods[i];
+                    //do something with the item
+                }
+                else
+                {
+                    //unknown method type, do nothing or log it
+                }
+            }
+
 
             //var result = await Program.graphClient.Users[Program.user.Id].Authentication.
 
@@ -1142,9 +1261,11 @@ namespace User_Security_Actions
                 // maximumlifetimeinminutes, etc have to cast the response into
                 // TemporaryAccessPassAuthenticationMethodConfiguration
 
+
                 tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
                     Program.graphClient.Policies.AuthenticationMethodsPolicy.
                     AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
+
             }
             catch (Exception err)
             {
@@ -1214,6 +1335,7 @@ namespace User_Security_Actions
                 {
                     //if the user is a member of the group, we store the group ID
                     groupId = exclusion.Id;
+
 
                     //we only need one match, so we can break out of the loop
                     break;

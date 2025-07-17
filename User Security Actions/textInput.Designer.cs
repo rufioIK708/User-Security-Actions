@@ -38,6 +38,7 @@
             this.radioButtonOffice = new System.Windows.Forms.RadioButton();
             this.radioButtonAltMobile = new System.Windows.Forms.RadioButton();
             this.radioButtonMobile = new System.Windows.Forms.RadioButton();
+            this.buttonCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -53,11 +54,10 @@
             // 
             // accept
             // 
-            this.accept.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.accept.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.accept.Location = new System.Drawing.Point(0, 128);
+            this.accept.Location = new System.Drawing.Point(3, 128);
             this.accept.Name = "accept";
-            this.accept.Size = new System.Drawing.Size(331, 23);
+            this.accept.Size = new System.Drawing.Size(146, 23);
             this.accept.TabIndex = 1;
             this.accept.Text = "Accept";
             this.accept.UseVisualStyleBackColor = true;
@@ -77,9 +77,10 @@
             // labelMethodMessage
             // 
             this.labelMethodMessage.AutoSize = true;
+            this.labelMethodMessage.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMethodMessage.Location = new System.Drawing.Point(10, 86);
             this.labelMethodMessage.Name = "labelMethodMessage";
-            this.labelMethodMessage.Size = new System.Drawing.Size(35, 13);
+            this.labelMethodMessage.Size = new System.Drawing.Size(50, 16);
             this.labelMethodMessage.TabIndex = 4;
             this.labelMethodMessage.Text = "label1";
             // 
@@ -160,12 +161,27 @@
             this.radioButtonMobile.Text = "Mobile";
             this.radioButtonMobile.UseVisualStyleBackColor = true;
             // 
+            // buttonCancel
+            // 
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonCancel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonCancel.Location = new System.Drawing.Point(185, 128);
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.Size = new System.Drawing.Size(147, 23);
+            this.buttonCancel.TabIndex = 6;
+            this.buttonCancel.Text = "Cancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
+            this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
+            // 
             // textInput
             // 
             this.AcceptButton = this.accept;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.buttonCancel;
             this.ClientSize = new System.Drawing.Size(331, 151);
+            this.ControlBox = false;
+            this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.labelMethodMessage);
             this.Controls.Add(this.inputPurpose);
@@ -199,5 +215,6 @@
         private System.Windows.Forms.RadioButton radioButtonOffice;
         private System.Windows.Forms.RadioButton radioButtonAltMobile;
         private System.Windows.Forms.RadioButton radioButtonMobile;
+        private System.Windows.Forms.Button buttonCancel;
     }
 }
