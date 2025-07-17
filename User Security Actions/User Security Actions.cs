@@ -1138,8 +1138,9 @@ namespace User_Security_Actions
             try
             {
                 //get the TAP method policy
-                // unable to get the values for defaultlifetimeinminutes, defaultlength, maximumlifetimeinminutes, etc 
-                // have to cast the response into TemporaryAccessPassAuthenticationMethodConfiguration
+                // unable to get the values for defaultlifetimeinminutes, defaultlength,
+                // maximumlifetimeinminutes, etc have to cast the response into
+                // TemporaryAccessPassAuthenticationMethodConfiguration
 
                 tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
                     Program.graphClient.Policies.AuthenticationMethodsPolicy.
