@@ -53,9 +53,9 @@ namespace User_Security_Actions
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
             this.tableLayoutPanel1.Controls.Add(this.labelExpDateTimeDisplay, 1, 5);
             this.tableLayoutPanel1.Controls.Add(this.labelExpDateTime, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.labelLastUsedDisplay, 1, 4);
@@ -88,9 +88,9 @@ namespace User_Security_Actions
             // 
             this.labelExpDateTimeDisplay.AutoSize = true;
             this.labelExpDateTimeDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelExpDateTimeDisplay.Location = new System.Drawing.Point(155, 155);
+            this.labelExpDateTimeDisplay.Location = new System.Drawing.Point(117, 155);
             this.labelExpDateTimeDisplay.Name = "labelExpDateTimeDisplay";
-            this.labelExpDateTimeDisplay.Size = new System.Drawing.Size(146, 31);
+            this.labelExpDateTimeDisplay.Size = new System.Drawing.Size(177, 31);
             this.labelExpDateTimeDisplay.TabIndex = 17;
             this.labelExpDateTimeDisplay.Text = "Expiration Date/Time goes here";
             this.labelExpDateTimeDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -101,7 +101,7 @@ namespace User_Security_Actions
             this.labelExpDateTime.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelExpDateTime.Location = new System.Drawing.Point(3, 155);
             this.labelExpDateTime.Name = "labelExpDateTime";
-            this.labelExpDateTime.Size = new System.Drawing.Size(146, 31);
+            this.labelExpDateTime.Size = new System.Drawing.Size(108, 31);
             this.labelExpDateTime.TabIndex = 16;
             this.labelExpDateTime.Text = "Expiration Date/Time";
             this.labelExpDateTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -110,9 +110,9 @@ namespace User_Security_Actions
             // 
             this.labelLastUsedDisplay.AutoSize = true;
             this.labelLastUsedDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelLastUsedDisplay.Location = new System.Drawing.Point(155, 124);
+            this.labelLastUsedDisplay.Location = new System.Drawing.Point(117, 124);
             this.labelLastUsedDisplay.Name = "labelLastUsedDisplay";
-            this.labelLastUsedDisplay.Size = new System.Drawing.Size(146, 31);
+            this.labelLastUsedDisplay.Size = new System.Drawing.Size(177, 31);
             this.labelLastUsedDisplay.TabIndex = 13;
             this.labelLastUsedDisplay.Text = "Last Used Date/Time goes here";
             this.labelLastUsedDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -123,7 +123,7 @@ namespace User_Security_Actions
             this.labelLastUsed.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelLastUsed.Location = new System.Drawing.Point(3, 124);
             this.labelLastUsed.Name = "labelLastUsed";
-            this.labelLastUsed.Size = new System.Drawing.Size(146, 31);
+            this.labelLastUsed.Size = new System.Drawing.Size(108, 31);
             this.labelLastUsed.TabIndex = 12;
             this.labelLastUsed.Text = "Last Used Date/Time";
             this.labelLastUsed.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -132,9 +132,9 @@ namespace User_Security_Actions
             // 
             this.labelStartDateTimeDisplay.AutoSize = true;
             this.labelStartDateTimeDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelStartDateTimeDisplay.Location = new System.Drawing.Point(155, 93);
+            this.labelStartDateTimeDisplay.Location = new System.Drawing.Point(117, 93);
             this.labelStartDateTimeDisplay.Name = "labelStartDateTimeDisplay";
-            this.labelStartDateTimeDisplay.Size = new System.Drawing.Size(146, 31);
+            this.labelStartDateTimeDisplay.Size = new System.Drawing.Size(177, 31);
             this.labelStartDateTimeDisplay.TabIndex = 10;
             this.labelStartDateTimeDisplay.Text = "Start Date/Time goes here";
             this.labelStartDateTimeDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -145,7 +145,7 @@ namespace User_Security_Actions
             this.labelStartDateTime.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelStartDateTime.Location = new System.Drawing.Point(3, 93);
             this.labelStartDateTime.Name = "labelStartDateTime";
-            this.labelStartDateTime.Size = new System.Drawing.Size(146, 31);
+            this.labelStartDateTime.Size = new System.Drawing.Size(108, 31);
             this.labelStartDateTime.TabIndex = 9;
             this.labelStartDateTime.Text = "Started Date/Time";
             this.labelStartDateTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -154,9 +154,9 @@ namespace User_Security_Actions
             // 
             this.labelCreatedDateTimeDisplay.AutoSize = true;
             this.labelCreatedDateTimeDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCreatedDateTimeDisplay.Location = new System.Drawing.Point(155, 62);
+            this.labelCreatedDateTimeDisplay.Location = new System.Drawing.Point(117, 62);
             this.labelCreatedDateTimeDisplay.Name = "labelCreatedDateTimeDisplay";
-            this.labelCreatedDateTimeDisplay.Size = new System.Drawing.Size(146, 31);
+            this.labelCreatedDateTimeDisplay.Size = new System.Drawing.Size(177, 31);
             this.labelCreatedDateTimeDisplay.TabIndex = 7;
             this.labelCreatedDateTimeDisplay.Text = "Created Date/Time goes here";
             this.labelCreatedDateTimeDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -167,7 +167,7 @@ namespace User_Security_Actions
             this.labelCreatedDateTime.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelCreatedDateTime.Location = new System.Drawing.Point(3, 62);
             this.labelCreatedDateTime.Name = "labelCreatedDateTime";
-            this.labelCreatedDateTime.Size = new System.Drawing.Size(146, 31);
+            this.labelCreatedDateTime.Size = new System.Drawing.Size(108, 31);
             this.labelCreatedDateTime.TabIndex = 6;
             this.labelCreatedDateTime.Text = "Created Date/Time :";
             this.labelCreatedDateTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -176,9 +176,9 @@ namespace User_Security_Actions
             // 
             this.labelidDisplay.AutoSize = true;
             this.labelidDisplay.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelidDisplay.Location = new System.Drawing.Point(155, 31);
+            this.labelidDisplay.Location = new System.Drawing.Point(117, 31);
             this.labelidDisplay.Name = "labelidDisplay";
-            this.labelidDisplay.Size = new System.Drawing.Size(146, 31);
+            this.labelidDisplay.Size = new System.Drawing.Size(177, 31);
             this.labelidDisplay.TabIndex = 4;
             this.labelidDisplay.Text = "ID goes here";
             this.labelidDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -189,7 +189,7 @@ namespace User_Security_Actions
             this.labelid.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelid.Location = new System.Drawing.Point(3, 31);
             this.labelid.Name = "labelid";
-            this.labelid.Size = new System.Drawing.Size(146, 31);
+            this.labelid.Size = new System.Drawing.Size(108, 31);
             this.labelid.TabIndex = 3;
             this.labelid.Text = "ID :";
             this.labelid.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -199,28 +199,29 @@ namespace User_Security_Actions
             this.labelDetailsTitle.AutoSize = true;
             this.labelDetailsTitle.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelDetailsTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelDetailsTitle.Location = new System.Drawing.Point(155, 0);
+            this.labelDetailsTitle.Location = new System.Drawing.Point(117, 0);
             this.labelDetailsTitle.Name = "labelDetailsTitle";
-            this.labelDetailsTitle.Size = new System.Drawing.Size(146, 31);
+            this.labelDetailsTitle.Size = new System.Drawing.Size(177, 31);
             this.labelDetailsTitle.TabIndex = 0;
             this.labelDetailsTitle.Text = "Details Title";
             this.labelDetailsTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // pictureBoxQrCode
             // 
-            this.pictureBoxQrCode.Location = new System.Drawing.Point(307, 3);
+            this.pictureBoxQrCode.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pictureBoxQrCode.Location = new System.Drawing.Point(300, 3);
             this.pictureBoxQrCode.Name = "pictureBoxQrCode";
             this.tableLayoutPanel1.SetRowSpan(this.pictureBoxQrCode, 5);
-            this.pictureBoxQrCode.Size = new System.Drawing.Size(148, 145);
+            this.pictureBoxQrCode.Size = new System.Drawing.Size(155, 149);
             this.pictureBoxQrCode.TabIndex = 14;
             this.pictureBoxQrCode.TabStop = false;
             // 
             // buttonChangeExpDate
             // 
             this.buttonChangeExpDate.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonChangeExpDate.Location = new System.Drawing.Point(307, 158);
+            this.buttonChangeExpDate.Location = new System.Drawing.Point(300, 158);
             this.buttonChangeExpDate.Name = "buttonChangeExpDate";
-            this.buttonChangeExpDate.Size = new System.Drawing.Size(148, 25);
+            this.buttonChangeExpDate.Size = new System.Drawing.Size(155, 25);
             this.buttonChangeExpDate.TabIndex = 18;
             this.buttonChangeExpDate.Text = "Change Expiration Date";
             this.buttonChangeExpDate.UseVisualStyleBackColor = true;
@@ -228,9 +229,9 @@ namespace User_Security_Actions
             // buttonDelCode
             // 
             this.buttonDelCode.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.buttonDelCode.Location = new System.Drawing.Point(155, 189);
+            this.buttonDelCode.Location = new System.Drawing.Point(117, 189);
             this.buttonDelCode.Name = "buttonDelCode";
-            this.buttonDelCode.Size = new System.Drawing.Size(146, 30);
+            this.buttonDelCode.Size = new System.Drawing.Size(177, 30);
             this.buttonDelCode.TabIndex = 19;
             this.buttonDelCode.Text = "Delete Code";
             this.buttonDelCode.UseVisualStyleBackColor = true;

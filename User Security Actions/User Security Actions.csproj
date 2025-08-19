@@ -259,6 +259,12 @@
   <ItemGroup>
     <Compile Include="GraphCalls.cs" />
     <Compile Include="MFAData.cs" />
+    <Compile Include="PinDetails.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PinDetails.Designer.cs">
+      <DependentUpon>PinDetails.cs</DependentUpon>
+    </Compile>
     <Compile Include="qrCodeWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -292,6 +298,9 @@
     <Compile Include="QrCodeDetails.Designer.cs">
       <DependentUpon>QrCodeDetails.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="PinDetails.resx">
+      <DependentUpon>PinDetails.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="qrCodeWindow.resx">
       <DependentUpon>qrCodeWindow.cs</DependentUpon>
     </EmbeddedResource>

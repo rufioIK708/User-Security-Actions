@@ -21,9 +21,9 @@ namespace User_Security_Actions
             InitializeComponent();
             this.labelidDisplay.Text = qrCode.id;
             this.labelCreatedDateTimeDisplay.Text = 
-                string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.createdDateTime.ToString());
+                string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.createdDateTime.Value.ToLocalTime().ToString());
             this.labelStartDateTimeDisplay.Text =
-                string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.startDateTime.ToString());
+                string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.startDateTime.Value.ToLocalTime().ToString());
 
         }
 
