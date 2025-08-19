@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace User_Security_Actions
 {
-    internal class GraphCalls
+    public class GraphCalls
     {
 #nullable enable
         static string baseAddress = "https://graph.microsoft.com/beta";

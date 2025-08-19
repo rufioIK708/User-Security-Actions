@@ -19,5 +19,14 @@ namespace User_Security_Actions
             InitializeComponent();
             
         }
+
+        public qrCodeWindow(GraphCalls.QrCodePinAuthenticationMethod qrCodeMethod)
+        {
+            InitializeComponent();
+            this.qrCodeDetailsStd = new QrCodeDetails(qrCodeMethod.standardQRCode);
+            this.qrCodeDetailsStd.Visible = true;
+            this.Validate();
+
+        }
     }
 }

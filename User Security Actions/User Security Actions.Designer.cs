@@ -342,7 +342,7 @@
             this.buttonQrCodeAuth.TabIndex = 16;
             this.buttonQrCodeAuth.Text = "QRCode Authentication";
             this.buttonQrCodeAuth.UseVisualStyleBackColor = true;
-            this.buttonQrCodeAuth.Visible = false;
+            this.buttonQrCodeAuth.Click += new System.EventHandler(this.buttonQrCodeAuth_Click);
             // 
             // Form1
             // 

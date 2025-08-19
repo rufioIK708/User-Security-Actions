@@ -15,6 +15,7 @@ using System.Drawing;
 using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -1284,6 +1285,13 @@ namespace User_Security_Actions
 
             //return the group ID
             return groupId;
+        }
+
+        private async void buttonQrCodeAuth_Click(object sender, EventArgs e)
+        {
+            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+
+            new qrCodeWindow(qrCode).ShowDialog();
         }
     }
 }
