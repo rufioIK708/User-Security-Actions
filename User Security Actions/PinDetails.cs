@@ -35,7 +35,7 @@ namespace User_Security_Actions
 
         private void buttonResetPin_Click(object sender, EventArgs e)
         {
-
+            
         }
     }
 }
