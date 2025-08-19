@@ -16,6 +16,7 @@ namespace User_Security_Actions
 
     public partial class textInput: Form
     {
+        //for presenting passwords
         public textInput(string label, string title, string password)
         {
             InitializeComponent();
@@ -23,6 +24,7 @@ namespace User_Security_Actions
             this.Text = title;
             //hide the split container, as we are not using it
             splitContainer1.Hide();
+            labelMethodMessage.Font = input1.Font;
             labelMethodMessage.Text = "Please have the user use the below on their next sign-in: ";
             input1.Text = password;
             input1.BackColor = System.Drawing.SystemColors.Control;
@@ -35,12 +37,14 @@ namespace User_Security_Actions
             [DllImport("User32.dll")]
             static extern Boolean HideCaret(IntPtr hWnd);
         }
+        //for accepting input from the user
         public textInput(string label, string title, bool mfa)
         {
             InitializeComponent();
             inputPurpose.Text = label;
             this.Text = title;
 
+            //if its being used for MFA, show/hide the appropriate controls
             if (mfa)
             {
                 splitContainer1.Show();
@@ -49,6 +53,7 @@ namespace User_Security_Actions
                 radioButtonOffice.Hide();
                 labelMethodMessage.Hide();
             }
+            //its not being used for MFA, so act accordingly
             else
             {
                 splitContainer1.Hide();
@@ -77,7 +82,7 @@ namespace User_Security_Actions
                 if (!splitContainer1.Visible)
                 {
                     this.Close();
-                    return;
+                    //return;
                 }
                 //if the user is using the MFA form, we need to store the method details
                 else if (radioButtonPhoneMethod.Checked)
@@ -95,7 +100,7 @@ namespace User_Security_Actions
                     else
                     {
                         MessageBox.Show("Please select a phone method type.");
-                        return;
+                        //return;
                     }
                 }
                 else if (radioButtonEmailMethod.Checked)

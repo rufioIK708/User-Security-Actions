@@ -179,8 +179,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.buttonCancel;
-            this.ClientSize = new System.Drawing.Size(331, 151);
-            this.ControlBox = false;
+            this.ClientSize = new System.Drawing.Size(335, 152);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.labelMethodMessage);
@@ -191,6 +190,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "textInput";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "textInput";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();

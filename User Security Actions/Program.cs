@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Azure.Core;
 using Azure.Identity;
 using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Groups.Item.Sites.Item.ContentModels;
 using Microsoft.Graph.Beta.Models;
 using User_Security_Actions;
-
+using Microsoft.Extensions.Logging;
 
 namespace User_Security_Actions
 {
@@ -39,6 +40,8 @@ namespace User_Security_Actions
 
         public static string ClientId = "492bc3cf-c421-4332-9e96-f56547f3ed56";
 
+        public static string TenantId = "common";
+
         // - values for MFA odata.type to check for various methods and call the specific API
         public const string platformCredMethod = "#microsoft.graph.platformCredentialAuthenticationMethod";
         public const string wHFBAuthMethod = "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod";
@@ -59,13 +62,14 @@ namespace User_Security_Actions
 
         // - variables used to store data for later lookup/use
         //public static string upn;
-
+#nullable enable
         // - - token and graph client 
-        public static InteractiveBrowserCredential token;
-        public static GraphServiceClient graphClient; 
+        public static InteractiveBrowserCredential? token = null;
+        public static AccessToken? accessToken = null;
+        public static GraphServiceClient? graphClient = null; 
         // - - string to read input from users
-        public static string input;
-
+        public static string? input = null;
+#nullable disable
         // - - bools to track the state of the app
         public static bool signedIn = false;
         public static bool validUser = false;
