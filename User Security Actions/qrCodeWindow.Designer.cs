@@ -34,10 +34,10 @@
             this.panelTmpCode = new System.Windows.Forms.TabPage();
             this.panelPin = new System.Windows.Forms.TabPage();
             this.labelPinNoQrCode = new System.Windows.Forms.Label();
-            this.qrCodeDetailsStd = new User_Security_Actions.QrCodeDetails();
+            this.labelTmpNoStdMsg = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.stdQrCodePage.SuspendLayout();
-            this.panelStdCode.SuspendLayout();
+            this.panelTmpCode.SuspendLayout();
             this.panelPin.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -68,7 +68,6 @@
             // 
             // panelStdCode
             // 
-            this.panelStdCode.Controls.Add(this.qrCodeDetailsStd);
             this.panelStdCode.Location = new System.Drawing.Point(3, 6);
             this.panelStdCode.Name = "panelStdCode";
             this.panelStdCode.Size = new System.Drawing.Size(606, 295);
@@ -77,6 +76,7 @@
             // 
             // panelTmpCode
             // 
+            this.panelTmpCode.Controls.Add(this.labelTmpNoStdMsg);
             this.panelTmpCode.Location = new System.Drawing.Point(4, 22);
             this.panelTmpCode.Name = "panelTmpCode";
             this.panelTmpCode.Padding = new System.Windows.Forms.Padding(3);
@@ -103,17 +103,23 @@
             this.labelPinNoQrCode.Name = "labelPinNoQrCode";
             this.labelPinNoQrCode.Size = new System.Drawing.Size(278, 26);
             this.labelPinNoQrCode.TabIndex = 0;
-            this.labelPinNoQrCode.Text = "There is no QrCodeAuthentication method configured yet.\r\nPlease create one in teh" +
+            this.labelPinNoQrCode.Text = "There is no QrCodeAuthentication method configured yet.\r\nPlease create one in the" +
     " Standard QR Code tab.";
             this.labelPinNoQrCode.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // qrCodeDetailsStd
+            // labelTmpNoStdMsg
             // 
-            this.qrCodeDetailsStd.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.qrCodeDetailsStd.Location = new System.Drawing.Point(0, 0);
-            this.qrCodeDetailsStd.Name = "qrCodeDetailsStd";
-            this.qrCodeDetailsStd.Size = new System.Drawing.Size(606, 295);
-            this.qrCodeDetailsStd.TabIndex = 0;
+            this.labelTmpNoStdMsg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelTmpNoStdMsg.AutoSize = true;
+            this.labelTmpNoStdMsg.Location = new System.Drawing.Point(182, 133);
+            this.labelTmpNoStdMsg.Name = "labelTmpNoStdMsg";
+            this.labelTmpNoStdMsg.Size = new System.Drawing.Size(278, 26);
+            this.labelTmpNoStdMsg.TabIndex = 0;
+            this.labelTmpNoStdMsg.Text = "There is no QrCodeAuthentication method configured yet.\r\nPlease create one in the" +
+    " Standard QR Code tab.\r\n";
+            this.labelTmpNoStdMsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // qrCodeWindow
             // 
@@ -125,7 +131,8 @@
             this.Text = "qrCodeWindow";
             this.tabControl.ResumeLayout(false);
             this.stdQrCodePage.ResumeLayout(false);
-            this.panelStdCode.ResumeLayout(false);
+            this.panelTmpCode.ResumeLayout(false);
+            this.panelTmpCode.PerformLayout();
             this.panelPin.ResumeLayout(false);
             this.panelPin.PerformLayout();
             this.ResumeLayout(false);
@@ -140,6 +147,6 @@
         private System.Windows.Forms.TabPage panelPin;
         private System.Windows.Forms.Panel panelStdCode;
         private System.Windows.Forms.Label labelPinNoQrCode;
-        private QrCodeDetails qrCodeDetailsStd;
+        private System.Windows.Forms.Label labelTmpNoStdMsg;
     }
 }

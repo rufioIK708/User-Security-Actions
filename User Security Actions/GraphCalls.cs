@@ -73,27 +73,29 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_METHOD_TEMPLATE, userId);
 
+            //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
                 Program.accessToken = await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
             {
+                string accessToken = Program.accessToken.Value.Token.ToString();
                 httpClient.BaseAddress = new Uri(baseAddress);
                 httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Program.accessToken.Value.Token.ToString());
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
                 // Call the endpoint for the current user
                 var response = await httpClient.GetAsync(baseAddress + endpoint);
 
+                //check the response and throw an exception if we are not successful
                 if (!response.IsSuccessStatusCode)
                 {
                     // You may want to handle errors more gracefully
                     throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
                 }
 
-                MessageBox.Show(await response.Content.ReadAsStringAsync());
-
+                //deserialize the JSON into objects.
                 try
                 {
                     qrCodeMethod =
@@ -105,7 +107,7 @@ namespace User_Security_Actions
                 }
                 
                 
-                // Return the raw JSON response
+                // Return the deserialized object.
                 return qrCodeMethod;
             }
 
