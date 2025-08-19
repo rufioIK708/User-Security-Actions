@@ -167,6 +167,7 @@ namespace User_Security_Actions
         public bool? isUsableOnce { get; set; }
         public Dictionary<string, object>? includeTargets { get; set; }
     }
+#nullable disable
 
     public static class MyExtensions
     {
@@ -241,7 +242,7 @@ namespace User_Security_Actions
         }
     }
 
-#nullable disable
+
     public class MFAExtras()
     {
         //get MFA methods for a user
@@ -281,9 +282,9 @@ namespace User_Security_Actions
                     //  Not all methods will have a lavel. Options are Push, Oath, VoiceMobile, VoiceAlternametMobile,
                     //  VoiceOffice, Sms, unknownFutureValure. Oath will not have a default value as any of multiple Oath
                     //  methods can be used, just the Oath screen will be presented to the user.
-                    switch (list[i].OdataType)
+                    switch (list[i])
                     {
-                        case Program.platformCredMethod:
+                        case PlatformCredentialAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var platformMethod = (PlatformCredentialAuthenticationMethod)list[i];
 
@@ -295,7 +296,7 @@ namespace User_Security_Actions
                             output += $"\nKey Strength     : {platformMethod.KeyStrength}";
                             break;
 
-                        case Program.wHFBAuthMethod:
+                        case WindowsHelloForBusinessAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var wfbMethod = (WindowsHelloForBusinessAuthenticationMethod)list[i];
 
@@ -307,7 +308,7 @@ namespace User_Security_Actions
                             output += $"\nKey Strength     : {wfbMethod.KeyStrength}";
                             break;
 
-                        case Program.tAPAuthMethod:
+                        case TemporaryAccessPassAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var tapMethod = (TemporaryAccessPassAuthenticationMethod)list[i];
 
@@ -320,7 +321,7 @@ namespace User_Security_Actions
                             output += $"\nTemp Access Pass : {tapMethod.TemporaryAccessPass}";
                             break;
 
-                        case Program.softOathAuthMethod:
+                        case SoftwareOathAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
 
                             //check for default method type. Able to be used for Oath
@@ -332,7 +333,7 @@ namespace User_Security_Actions
                             output += $"\nDisplay Name    : {softOathMethod.SecretKey}";
                             break;
 
-                        case Program.phoneAuthMethod:
+                        case PhoneAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var phoneMethod = (PhoneAuthenticationMethod)list[i];
 
@@ -354,7 +355,7 @@ namespace User_Security_Actions
                             output += $"\nSMS SignInState : {phoneMethod.SmsSignInState}";
                             break;
 
-                        case Program.passwordAuthMethod:
+                        case PasswordAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var passwordAuthMethod = (PasswordAuthenticationMethod)list[i];
 
@@ -364,7 +365,7 @@ namespace User_Security_Actions
                             output += $"\nDisplay Name    : {passwordAuthMethod.Password}";
                             break;
 
-                        case Program.mSAuthenticatorAuthMethod:
+                        case MicrosoftAuthenticatorAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var mSAuthenticatorMethod = (MicrosoftAuthenticatorAuthenticationMethod)list[i];
 
@@ -379,7 +380,7 @@ namespace User_Security_Actions
                             output += $"\nApp Version     : {mSAuthenticatorMethod.PhoneAppVersion}";
                             break;
 
-                        case Program.hardOathAuthMethod:
+                        case HardwareOathAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var hardOathAuthMethod = (HardwareOathAuthenticationMethod)list[i];
 
@@ -391,7 +392,7 @@ namespace User_Security_Actions
                             output += $"\nDevice Name    : {hardOathAuthMethod.Device}";
                             break;
 
-                        case Program.fido2AuthMethod:
+                        case Fido2AuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var fido2Method = (Fido2AuthenticationMethod)list[i];
 
@@ -405,7 +406,7 @@ namespace User_Security_Actions
                             output +=$"\nDevice          : {fido2Method.Model}";
                             break;
 
-                        case Program.emailAuthMethod:
+                        case EmailAuthenticationMethod:
                             //cast the array item into the actual object so that we have all the data available.
                             var emailAuthMethod = (EmailAuthenticationMethod)list[i];
                             
@@ -414,24 +415,7 @@ namespace User_Security_Actions
                             output += $"\nEmail address   : {emailAuthMethod.EmailAddress}";
                             break;
 
-                        //these are no longer listed but are still included just in case
-                        case Program.phoneAppNotificationAuthMethhod:
-                            output +=$"\nType of Method : Phone App Notification";
-                            break;
-
-                        case Program.appPasswordAuthMethod:
-                            output +=$"\nType of Method : App Password";
-                            break;
-
-                        case Program.phoneAppOTPAuthMethod:
-                            output +=$"\nType of Method : Phone App OTP";
-                            break;
-
-                        case Program.passwordlessMSAuthenticatorMethod:
-                            output +=$"\nType of Method : Passwordless Microsoft Authenticator";
-                            break;
-
-
+                        
                         //incase we get a new method type
                         default:
                             output +=$"\nType of Method : {list[i].OdataType}";
@@ -522,6 +506,7 @@ namespace User_Security_Actions
 
                 try
                 {
+                    object value;
                     var result = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
 
                     //attempting to clean up the response and disply it
@@ -535,11 +520,12 @@ namespace User_Security_Actions
                     //  so we can use last, but needs a better way to do this.
 
                     //Need to check if the value is null and disply accordingly
-                    if (result.AdditionalData.ContainsKey("systemPreferredAuthenticationMethod"))
-                    {
-                        object value;
-                        result.AdditionalData.TryGetValue("systemPreferredAuthenticationMethod", out value);
-                        advDetails += value.ToString();
+                    if (result.AdditionalData.TryGetValue("systemPreferredAuthenticationMethod",out value))
+                    { 
+                        if (null == value)
+                            advDetails += "NULL";
+                        else
+                            advDetails += value.ToString();
                     }
                     else
                         advDetails += "NULL";
@@ -574,12 +560,12 @@ namespace User_Security_Actions
         public static async Task<bool> isTenantPremium()
         {
             bool successful = false;
-            var options = new JsonSerializerOptions { WriteIndented = true };
+            //var options = new JsonSerializerOptions { WriteIndented = true };
 
             try
             {
                 var response = await Program.graphClient.Organization.GetAsync();
-                var orgDetails = JsonSerializer.Serialize(response, options);
+                //var orgDetails = JsonSerializer.Serialize(response, options);
 
                 if (response.Value.ToString().Contains("AADPremium"))
                 {

@@ -1,12 +1,11 @@
 ﻿using Azure;
 using Azure.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Graph.Beta;
-using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
 using Microsoft.Graph.Beta.Models;
 //using Microsoft.Graph.Beta.Models.Networkaccess;
 using Microsoft.Graph.Beta.Models.ODataErrors;
 using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
-using Microsoft.Kiota.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +15,7 @@ using System.Drawing;
 using System.IdentityModel;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.Xml;
 using System.Text;
@@ -24,8 +24,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 using User_Security_Actions;
-using Microsoft.Graph.Beta.Communications.CallRecords.MicrosoftGraphCallRecordsGetPstnOnlineMeetingDialoutReportWithFromDateTimeWithToDateTime;
-using Microsoft.Kiota.Abstractions;
 using static System.Net.Mime.MediaTypeNames;
 
 
@@ -196,7 +194,7 @@ namespace User_Security_Actions
                 user = await Program.graphClient.Users[upn].GetAsync((requestConfiguration) =>
                 {
                     requestConfiguration.QueryParameters.Select = new[] { "displayName", "onPremisesImmutableId", "userPrincipalName",
-                                        "MemberOf", "AccountEnabled", "PasswordPolicies", "RefreshTokensValidFromDateTime" };
+                        "MemberOf", "AccountEnabled", "PasswordPolicies", "RefreshTokensValidFromDateTime" };
                 });
             }
             catch (ODataError e)
@@ -529,10 +527,7 @@ namespace User_Security_Actions
                         //throw an exception? error message?
                         break;
                 }
-
-
             }
-
 
             if (successful)
             {
@@ -553,10 +548,17 @@ namespace User_Security_Actions
             //variable to check if the sign-in was successful
             bool successful = false;
 
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                //builder.AddDebug();
+                builder.AddConsole();
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
             //initialize the token
             Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
-            //initialize the Graph client
-            Program.graphClient = new GraphServiceClient(Program.token, Program.scopes);
+
+            
+            
 
             //verify the user is signed in
             try
@@ -589,7 +591,6 @@ namespace User_Security_Actions
 
             //refresh the form
             Form1_Load(sender, e);
-
         }
 
         //get and hold a user
@@ -599,7 +600,7 @@ namespace User_Security_Actions
             //richTextBox1.Clear();
 
             Program.admin = await Program.graphClient.Me.GetAsync();
-            Program.user = null;
+            
             bool result = false;
             new textInput("Please enter the ObjectID/UPN of a user", "Select a User", false).ShowDialog();
 
@@ -612,6 +613,8 @@ namespace User_Security_Actions
                 //try to get the user
                 try
                 {
+                    //clear the user var first
+                    Program.user = null;
                     Program.user = await getUser(input);
 
                 }
@@ -621,7 +624,6 @@ namespace User_Security_Actions
                         + "\nResult is: " + result.ToString());
                     result = false;
                     //throw err;
-
                 }
 
                 //if UPN is not null, we successfully got a user
@@ -663,7 +665,7 @@ namespace User_Security_Actions
             }
             else
             {
-                //reset cancelled state
+                //reset cancelled state and don't do anything else
                 Program.cancelled = false;
             }
         }
@@ -815,10 +817,12 @@ namespace User_Security_Actions
 
         private async void buttonToggleAccount_Click(object sender, EventArgs e)
         {
+            //flip/toggle the value of AccountEnabled
             Program.user.AccountEnabled = !Program.user.AccountEnabled;
 
             try
             {
+                //update the user with the new AccountEnabled value
                 await Program.graphClient.Users[Program.user.Id].PatchAsync(Program.user);
             }
             catch (ODataError err)
@@ -1145,84 +1149,27 @@ namespace User_Security_Actions
 
         private async void buttonFunctions_Click(object sender, EventArgs e)
         {
-
-            var response = await Program.graphClient.Users[Program.user.Id].Authentication.SignInPreferences.GetAsync();
-            modifyRichTextBox("\n" + response.IsSystemPreferredAuthenticationMethodEnabled.Value.ToString());
-            modifyRichTextBox("\n" + response.UserPreferredMethodForSecondaryAuthentication.ToString());
-            if (null != response.OdataType)
-                modifyRichTextBox("\nOdata: " + response.OdataType.ToString());
-
-
-            for(int i = 0; i < methods.Count; i++)
+            GraphCalls.QrCodePinAuthenticationMethod output = null;
+            try
             {
-                if( Program.mSAuthenticatorAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    MicrosoftAuthenticatorAuthenticationMethod item = (MicrosoftAuthenticatorAuthenticationMethod)methods[i];
-                    
-                }
-                else if (Program.fido2AuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    Fido2AuthenticationMethod item = (Fido2AuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.hardOathAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    HardwareOathAuthenticationMethod item = (HardwareOathAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.softOathAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    SoftwareOathAuthenticationMethod item = (SoftwareOathAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.phoneAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    PhoneAuthenticationMethod item = (PhoneAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.passwordAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    PasswordAuthenticationMethod item = (PasswordAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.tAPAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    TemporaryAccessPassAuthenticationMethod item = (TemporaryAccessPassAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.platformCredMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    PlatformCredentialAuthenticationMethod item = (PlatformCredentialAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.wHFBAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    WindowsHelloForBusinessAuthenticationMethod item = (WindowsHelloForBusinessAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else if (Program.emailAuthMethod == methods[i].OdataType)
-                {
-                    //get the method ID
-                    EmailAuthenticationMethod item = (EmailAuthenticationMethod)methods[i];
-                    //do something with the item
-                }
-                else
-                {
-                    //unknown method type, do nothing or log it
-                }
+                output = await GraphCalls.GetQrCodeMethodOne();
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show(err.Message);
             }
 
-
-            //var result = await Program.graphClient.Users[Program.user.Id].Authentication.
+            if (null != output.standardQRCode)
+            {
+                if (null != output.standardQRCode.id)
+                {
+                    MessageBox.Show(output.standardQRCode.id);
+                }
+                else
+                    MessageBox.Show("ID is null");
+            }
+            else
+                MessageBox.Show("standard code is null");
 
         }
 
@@ -1230,7 +1177,8 @@ namespace User_Security_Actions
         {
             try
             {
-                var result = await Program.graphClient.Users[Program.user.Id].RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync();
+                var result = await Program.graphClient.Users[Program.user.Id]
+                    .RevokeSignInSessions.PostAsRevokeSignInSessionsPostResponseAsync();
                 modifyRichTextBox("\n" + result.ToString());
             }
             catch (Exception err)
@@ -1242,12 +1190,7 @@ namespace User_Security_Actions
 
         private async void buttonAddTapMethod_Click(object sender, EventArgs e)
         {
-            //1. Get the TAP method policy
-            //2. Modify the form to show the options
-            //3. Get the input from the user
-            //4. Generate the request from the input
-            //5. Submit the request
-            //6. Display the result
+            
 
 
             //1. Get and parse the TAP method policy
@@ -1261,11 +1204,9 @@ namespace User_Security_Actions
                 // maximumlifetimeinminutes, etc have to cast the response into
                 // TemporaryAccessPassAuthenticationMethodConfiguration
 
-
                 tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
                     Program.graphClient.Policies.AuthenticationMethodsPolicy.
                     AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
-
             }
             catch (Exception err)
             {
@@ -1273,7 +1214,7 @@ namespace User_Security_Actions
                     + "\n" + err.Message);
             }
             
-            groupTAPResult = await checkTAPGroupMembership(tapPolicy.ExcludeTargets);
+            groupTAPResult = await checkGroupMembership(tapPolicy.ExcludeTargets);
 
             //if the policy is not enabled, we stop here
             if (AuthenticationMethodState.Disabled == tapPolicy.State)
@@ -1321,7 +1262,7 @@ namespace User_Security_Actions
 
         }
 
-        private async Task<string> checkTAPGroupMembership(List<ExcludeTarget> targets)
+        private async Task<string> checkGroupMembership(List<ExcludeTarget> targets)
         {
             //check if the user is a member of the TAP group
             //if they are, we cannot continue
@@ -1344,6 +1285,13 @@ namespace User_Security_Actions
 
             //return the group ID
             return groupId;
+        }
+
+        private async void buttonQrCodeAuth_Click(object sender, EventArgs e)
+        {
+            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+
+            new qrCodeWindow(qrCode).ShowDialog();
         }
     }
 }

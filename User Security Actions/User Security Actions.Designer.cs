@@ -47,6 +47,7 @@
             this.buttonSignOut = new System.Windows.Forms.Button();
             this.buttonFunctions = new System.Windows.Forms.Button();
             this.displayBox = new System.Windows.Forms.RichTextBox();
+            this.buttonQrCodeAuth = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -111,6 +112,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Controls.Add(this.buttonQrCodeAuth, 3, 3);
             this.tableLayoutPanel1.Controls.Add(this.buttonAddTapMethod, 2, 3);
             this.tableLayoutPanel1.Controls.Add(this.buttonRevokeSessions, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.labelSelectedUser, 0, 0);
@@ -330,6 +332,18 @@
             this.displayBox.TabIndex = 2;
             this.displayBox.Text = "Just for reference";
             // 
+            // buttonQrCodeAuth
+            // 
+            this.buttonQrCodeAuth.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.buttonQrCodeAuth.Font = new System.Drawing.Font("Lucida Console", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonQrCodeAuth.Location = new System.Drawing.Point(810, 144);
+            this.buttonQrCodeAuth.Name = "buttonQrCodeAuth";
+            this.buttonQrCodeAuth.Size = new System.Drawing.Size(266, 43);
+            this.buttonQrCodeAuth.TabIndex = 16;
+            this.buttonQrCodeAuth.Text = "QRCode Authentication";
+            this.buttonQrCodeAuth.UseVisualStyleBackColor = true;
+            this.buttonQrCodeAuth.Click += new System.EventHandler(this.buttonQrCodeAuth_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 13F);
@@ -378,6 +392,7 @@
         private System.Windows.Forms.Button buttonRevokeSessions;
         private System.Windows.Forms.Button buttonAddTapMethod;
         private System.Windows.Forms.Button buttonFunctions;
+        private System.Windows.Forms.Button buttonQrCodeAuth;
     }
 }
 
