@@ -1159,11 +1159,11 @@ namespace User_Security_Actions
                 MessageBox.Show(err.Message);
             }
 
-            if (null != output.standardQRCode)
+            if (null != output.StandardQRCode)
             {
-                if (null != output.standardQRCode.id)
+                if (null != output.StandardQRCode.id)
                 {
-                    MessageBox.Show(output.standardQRCode.id);
+                    MessageBox.Show(output.StandardQRCode.id);
                 }
                 else
                     MessageBox.Show("ID is null");

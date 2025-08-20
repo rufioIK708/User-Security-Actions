@@ -18,18 +18,26 @@ namespace User_Security_Actions
             InitializeComponent();
         }
 
-        public PinDetails(QrPin pin)
+        public PinDetails(GraphCalls.QrPin pin)
         {
             InitializeComponent();
-            if(null != pin.Id)
+            if (null == pin.Id)
+                labelPinIdDisplay.Text = "NULL";
+            else
                 labelPinIdDisplay.Text = pin.Id;
+
             if(pin.CreatedDateTime.HasValue)
                 labelPinCreatedDisplay.Text = pin.CreatedDateTime.Value.ToLocalTime().ToString();
+
             if (pin.UpdatedDateTime.HasValue)
                 labelPinUpdatedDisplay.Text = pin.UpdatedDateTime.Value.ToLocalTime().ToString();
+
             if (pin.ForceChangePinNextSignIn.HasValue)
                 labelPinForceChangeDisplay.Text = pin.ForceChangePinNextSignIn.ToString();
-            if (null != pin.Code)
+
+            if (null == pin.Code)
+                labelPinNewPinDisplay.Text = "N/A";
+            else
                 labelPinNewPinDisplay.Text = pin.Code;
         }
 

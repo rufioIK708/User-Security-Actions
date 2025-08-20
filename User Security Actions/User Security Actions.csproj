@@ -257,6 +257,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StdCreateQRCode.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="StdCreateQRCode.Designer.cs">
+      <DependentUpon>StdCreateQRCode.cs</DependentUpon>
+    </Compile>
     <Compile Include="GraphCalls.cs" />
     <Compile Include="MFAData.cs" />
     <Compile Include="PinDetails.cs">
@@ -298,6 +304,9 @@
     <Compile Include="QrCodeDetails.Designer.cs">
       <DependentUpon>QrCodeDetails.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="StdCreateQRCode.resx">
+      <DependentUpon>StdCreateQRCode.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PinDetails.resx">
       <DependentUpon>PinDetails.cs</DependentUpon>
     </EmbeddedResource>

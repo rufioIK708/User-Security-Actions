@@ -29,14 +29,49 @@ namespace User_Security_Actions
             {
                 //do nothing
             }
+            //qrCodeMethod is not null
             else
             {
-                PinDetails pinDetails = new PinDetails(qrCodeMethod.pin);
-            }
-                QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.standardQRCode);
-            qrCodeDetails.Dock = DockStyle.Fill;
+                //PIN has to be populated at minimum if qrCode is not null
+                this.panelPin.Controls.Clear();
+                PinDetails pinDetails = new PinDetails(qrCodeMethod.Pin);
+                pinDetails.Dock = DockStyle.Fill;
+                this.panelPin.Controls.Add(pinDetails);
 
-            this.stdQrCodePage.Controls.Add(qrCodeDetails);
+                //For the StdPane, check if the standard code is null
+                if (null == qrCodeMethod.StandardQRCode)
+                {
+                    //add the create method pane
+                    StdCreateQRCode stdPane = new StdCreateQRCode(true);
+                    stdPane.Dock = DockStyle.Fill;
+                    this.panelStdCode.Controls.Add(stdPane);
+                }
+                else 
+                {
+                    //create the details pane
+                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.StandardQRCode, true);
+                    qrCodeDetails.Dock = DockStyle.Fill;
+                    //add it to the window
+                    this.panelStdCode.Controls.Add(qrCodeDetails);
+                }
+
+                //For the TmpPane, check if the temporary code is null
+                if(null == qrCodeMethod.TemporaryQRCode)
+                {
+                    //add the create method pane
+                }
+                else
+                {
+                    //create the details pane
+                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.TemporaryQRCode, false);
+                    qrCodeDetails.Dock = DockStyle.Fill;
+                    //add it to the window
+                    this.panelTmpCode.Controls.Add(qrCodeDetails);
+                }
+                
+            }
+                
+            
            
             this.Validate();
         }
