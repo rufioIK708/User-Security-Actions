@@ -80,6 +80,8 @@ namespace User_Security_Actions
                     buttonRevokeSessions.Enabled = true;
                     buttonAddTapMethod.Show();
                     buttonAddTapMethod.Enabled = true;
+                    buttonQrCodeAuth.Show();
+                    buttonQrCodeAuth.Enabled = true;
 
                     //specific button text based on account status
                     bool? enabled = Program.user.AccountEnabled;
@@ -114,6 +116,8 @@ namespace User_Security_Actions
                     buttonRevokeSessions.Enabled = false;
                     buttonAddTapMethod.Hide();
                     buttonAddTapMethod.Enabled = false;
+                    buttonQrCodeAuth.Hide();
+                    buttonQrCodeAuth.Enabled = false;
                 }
             }
             else
@@ -851,7 +855,7 @@ namespace User_Security_Actions
             if (!Program.cancelled)
             {
                 //trim the input
-                string input = Program.input.Trim();
+                string input = Program.input;
 
                 //check if email method and add.
                 if (Program.methodType == MethodType.Email)
@@ -1055,7 +1059,7 @@ namespace User_Security_Actions
 
 
 
-            MessageBox.Show("methods deleted");
+            //MessageBox.Show("methods deleted");
 
 
         }
@@ -1289,9 +1293,71 @@ namespace User_Security_Actions
 
         private async void buttonQrCodeAuth_Click(object sender, EventArgs e)
         {
-            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+            string messageDisabledError = "The method is disabled in the tenant by policy.\n" +
+                "Please enable the policy in Entra > Authentication Methods.";
+            string messagePolicyError = "Error getting the QrCode policy.\n";
+            string messageGroupAcquisitionError = "Error getting QR Code group information. Please try again.";
+            string messageGroupError = "The user is a excluded from the QR Code method\n"
+                + "due to inclusion into the group: {0}\n"
+                + "Please remove them from the group to continue.\n"
+                + "Other memberships could also exclude the user.";
 
-            new qrCodeWindow(qrCode).ShowDialog();
+            QrCodePinAuthenticationMethodConfiguration qrPolicy = null;
+
+            try
+            {
+                //get the policy for the tenant
+                qrPolicy = (QrCodePinAuthenticationMethodConfiguration)await
+                    Program.graphClient.Policies.AuthenticationMethodsPolicy
+                    .AuthenticationMethodConfigurations["QrCodePin"].GetAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(messagePolicyError + ex.Message);
+            }
+
+            //get group exclusion if present
+            string groupQrResult = await checkGroupMembership(qrPolicy.ExcludeTargets);
+            
+            //check policy settings to verify if we should continue
+            if (null != qrPolicy && AuthenticationMethodState.Disabled == qrPolicy.State)
+            {
+                //the policy disables the method
+                MessageBox.Show(messageDisabledError);
+            }
+            else if("None" != groupQrResult)
+            {
+                //the user is in a group that is exlcuded.
+                Group excludeGroup = null;
+                try
+                {
+                    //get the group from the group ID
+                    excludeGroup = await Program.graphClient.Groups[groupQrResult].GetAsync();
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show(messageGroupAcquisitionError + "\n" + err.Message);
+                }
+
+                if (excludeGroup != null)
+                    MessageBox.Show(String.Format(messageGroupError, excludeGroup.DisplayName));
+                else
+                    MessageBox.Show(messageGroupError);
+            }
+            else
+            {
+                //get the method for the user
+                try
+                {
+                    GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+                    //made it past the checks, show the window
+                    new qrCodeWindow(qrCode, qrPolicy).Show();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }   
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph.Beta.Models.ManagedTenants;
 using Microsoft.Identity.Client;
 using System;
@@ -8,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -17,35 +19,39 @@ namespace User_Security_Actions
     {
 #nullable enable
         static string baseAddress = "https://graph.microsoft.com/beta";
-        static string QR_CODE_METHOD_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod";
-        static string QR_CODE_STANDARD_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/standardQrCode";
-        static string QR_CODE_TEMPORARY_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
-        static string QR_CODE_PIN_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
+        static string QR_CODE_METHOD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod";
+        static string QR_CODE_STANDARD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/standardQrCode";
+        static string QR_CODE_TEMPORARY_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
+        static string QR_CODE_PIN_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
+        static string QR_CODE_METHOD_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCodePinAuthenticationMethod",  "standardQRCode": {"expireDateTime": "{0}","startDateTime": "{1}"}, "pin": {"code": "{2}"}}""";
+        static string QR_CODE_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCode", "expireDateTime": "{0}", "startDateTime": "{1}",}""";
 
-        public enum errorCorrectionLevel
+        public enum ErrorCorrectionLevel
         {
             l,
             m,
             q,
-            h
+            h,
+            unknownFutureValue
         }
 
         public class QrCodeImageDetails
         {
             public byte[]? BinaryValue { get; set; }
-            public errorCorrectionLevel? ErrorCorrectionLevel { get; set; }
-            public byte[]? RawContent { get; set; }
             public int? Version { get; set; }
+            public byte[]? RawContent { get; set; }
+            [JsonIgnore]
+            public ErrorCorrectionLevel? ErrorCorrectionLevel { get; set; }
         }
 
         public class QrCode
         {
             public string? id { get; set; }
-            public DateTimeOffset? CreatedDateTime { get; set; }
             public DateTimeOffset? ExpireDateTime { get; set; }
-            public QrCodeImageDetails? image { get; set; }
-            public DateTimeOffset? LastUsedDateTime { get; set; }
             public DateTimeOffset? StartDateTime { get; set; }
+            public DateTimeOffset? CreatedDateTime { get; set; }
+            public DateTimeOffset? LastUsedDateTime { get; set; }
+            public QrCodeImageDetails? image { get; set; }
         }
 
         public class QrPin
@@ -72,7 +78,7 @@ namespace User_Security_Actions
         {
             QrCodePinAuthenticationMethod qrCodeMethod = null;
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_METHOD_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -90,7 +96,7 @@ namespace User_Security_Actions
                 var response = await httpClient.GetAsync(baseAddress + endpoint);
 
                 //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode && "404" != response.StatusCode.ToString())
+                if (!response.IsSuccessStatusCode && System.Net.HttpStatusCode.NotFound != response.StatusCode)
                 {
                     // You may want to handle errors more gracefully
                     throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
@@ -101,7 +107,8 @@ namespace User_Security_Actions
                 {
                     var options = new JsonSerializerOptions
                     {
-                        PropertyNameCaseInsensitive = true
+                        AllowOutOfOrderMetadataProperties = true,
+                        PropertyNameCaseInsensitive = true                    
                     };
 
                     qrCodeMethod = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
@@ -118,10 +125,10 @@ namespace User_Security_Actions
             }
         }
 
-        public static async void DeleteStandardQrCode()
+        public static async Task DeleteStandardQrCode()
         {
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_STANDARD_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -147,10 +154,10 @@ namespace User_Security_Actions
             }
         }
 
-        public static async void DeleteTemporaryQrCode()
+        public static async Task DeleteTemporaryQrCode()
         {
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_TEMPORARY_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -180,7 +187,7 @@ namespace User_Security_Actions
         {
             bool successful = false;
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_PIN_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_PIN_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -223,13 +230,14 @@ namespace User_Security_Actions
             return successful;
         }
 
-        public static async Task<QrCodePinAuthenticationMethod> CreateStandardQrCode(QrCode newQrCode)
+        public static async Task<QrCode> CreateStandardQrCode(QrCode newQrCode)
         {
-            QrCodePinAuthenticationMethod newCodeMethod = null;
+            //QrCodePinAuthenticationMethod newCodeMethod = null;
+            QrCode returnedCode = null;
 
             //bool successful = false;
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_STANDARD_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -243,7 +251,17 @@ namespace User_Security_Actions
                 httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-                String patchCode = JsonSerializer.Serialize(newQrCode);
+                String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
+                
+
+                /*try
+                {
+                    patchCode = String.Format(QR_CODE_CONTENT_TEMPLATE, newQrCode.ExpireDateTime.Value.ToUniversalTime().ToString(),
+                        newQrCode.StartDateTime.Value.ToUniversalTime().ToString());
+                }
+                catch (FormatException e) { MessageBox.Show("this was a format exception\n" + e.Message); }
+                catch (ArgumentNullException e) { MessageBox.Show("This was a null arg error\n" + e.Message); }*/
+
 
                 var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
@@ -262,25 +280,29 @@ namespace User_Security_Actions
                 }
                 else
                 {
-                    var deserialize = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync());
+                    try
+                    {
+                        var deserialize = await DeserializeObject<QrCode>
+                            (await response.Content.ReadAsStringAsync());
 
-                    newCodeMethod = deserialize;
+                        returnedCode = deserialize;
+                    }
+                    catch (Exception ex) { throw ex; }
                 }
             }
 
-            return newCodeMethod;
+            return returnedCode;
 
         }
 
-        public static async Task<QrCodePinAuthenticationMethod> CreateTemporaryQrCode(QrCode newQrCode)
+        public static async Task<QrCode> CreateTemporaryQrCode(QrCode newQrCode)
         {
-            QrCodePinAuthenticationMethod newCodeMethod = null;
+            QrCode newCode = null;
 
             //bool successful = false;
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_TEMPORARY_TEMPLATE, userId);
-
+            string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
+            
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
                 Program.accessToken = await UserAuthentication.GetAccessToken();
@@ -293,7 +315,7 @@ namespace User_Security_Actions
                 httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-                String patchCode = JsonSerializer.Serialize(newQrCode);
+                String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
 
                 var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
@@ -312,24 +334,29 @@ namespace User_Security_Actions
                 }
                 else
                 {
-                    var deserialize = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync());
+                    try
+                    {
+                        var deserialize = await DeserializeObject<QrCode>
+                            (await response.Content.ReadAsStringAsync());
 
-                    newCodeMethod = deserialize;
+                        newCode = deserialize;
+                    }
+                    catch (Exception ex) { throw ex; }
+                   
                 }
             }
 
-            return newCodeMethod;
+            return newCode;
         }
 
         public static async Task<QrCodePinAuthenticationMethod> 
-            CreateTemporaryQrCodeMethod(QrCodePinAuthenticationMethod newQrCode)
+            CreateQrCodeMethod(QrCodePinAuthenticationMethod newQrCode)
         {
             QrCodePinAuthenticationMethod newCodeMethod = null;
 
             //bool successful = false;
             string userId = Program.user.Id;
-            string endpoint = string.Format(QR_CODE_METHOD_TEMPLATE, userId);
+            string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
@@ -343,16 +370,12 @@ namespace User_Security_Actions
                 httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-                String patchCode = JsonSerializer.Serialize(newQrCode);
+                string patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCodePinAuthenticationMethod\",  \"standardQRCode\": {{\"expireDateTime\": \"{newQrCode.StandardQRCode.ExpireDateTime.Value.ToUniversalTime()}\",\"startDateTime\": \"{newQrCode.StandardQRCode.StartDateTime.Value.ToUniversalTime()}\"}}, \"pin\": {{\"code\": \"{newQrCode.Pin.Code}\"}}}}";
 
                 var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
-                var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
-                {
-                    Content = content
-                };
 
                 // Call the endpoint for the current user
-                var response = await httpClient.SendAsync(request);
+                var response = await httpClient.PutAsync(baseAddress + endpoint, content);
 
                 //check the response and throw an exception if we are not successful
                 if (!response.IsSuccessStatusCode)
@@ -362,14 +385,37 @@ namespace User_Security_Actions
                 }
                 else
                 {
-                    var deserialize = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync());
+                    try
+                    {
+                        string jsonString = await response.Content.ReadAsStringAsync();
 
-                    newCodeMethod = deserialize;
+                        var deserialize = await DeserializeObject<QrCodePinAuthenticationMethod>
+                            (jsonString);
+
+                        newCodeMethod = deserialize;
+                    }
+                    catch (Exception ex) { throw ex; }
+                    
                 }
             }
 
             return newCodeMethod;
+        }
+
+        public static async Task<T> DeserializeObject<T>(string json)
+        {
+            var options = new JsonSerializerOptions
+            {
+                AllowOutOfOrderMetadataProperties = true,
+                PropertyNameCaseInsensitive = true
+            };
+
+            try
+            {
+                var deserialize = JsonSerializer.Deserialize<T>(json, options);
+                return deserialize;
+            }
+            catch (Exception e) { throw e; }
         }
     }
 }

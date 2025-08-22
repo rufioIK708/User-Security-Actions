@@ -9,25 +9,28 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Graph.Beta;
+using Microsoft.Graph.Beta.Models;
 namespace User_Security_Actions
 {
     public partial class qrCodeWindow : Form
     {
-        
+        QrCodePinAuthenticationMethodConfiguration qrPolicy;
 
         public qrCodeWindow()
         {
             InitializeComponent();
-            
         }
 
-        public qrCodeWindow(GraphCalls.QrCodePinAuthenticationMethod qrCodeMethod)
+        public qrCodeWindow(GraphCalls.QrCodePinAuthenticationMethod qrCodeMethod,
+            QrCodePinAuthenticationMethodConfiguration qrPolicy)
         {
             InitializeComponent();
-            
-            if(null == qrCodeMethod)
+
+            this.qrPolicy = qrPolicy;
+
+            if(null == qrCodeMethod || null == qrCodeMethod.Pin)
             {
-                //do nothing
+                
             }
             //qrCodeMethod is not null
             else
@@ -42,15 +45,18 @@ namespace User_Security_Actions
                 if (null == qrCodeMethod.StandardQRCode)
                 {
                     //add the create method pane
-                    StdCreateQRCode stdPane = new StdCreateQRCode(true);
+                    this.panelStdCode.Controls.Clear();
+                    StdCreateQRCode stdPane = new StdCreateQRCode(true, qrPolicy);
                     stdPane.Dock = DockStyle.Fill;
                     this.panelStdCode.Controls.Add(stdPane);
                 }
                 else 
                 {
                     //create the details pane
-                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.StandardQRCode, true);
+                    this.panelStdCode.Controls.Clear();
+                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.StandardQRCode, true, qrPolicy);
                     qrCodeDetails.Dock = DockStyle.Fill;
+                    qrCodeDetails.Name = "panelStdDetails";
                     //add it to the window
                     this.panelStdCode.Controls.Add(qrCodeDetails);
                 }
@@ -59,20 +65,25 @@ namespace User_Security_Actions
                 if(null == qrCodeMethod.TemporaryQRCode)
                 {
                     //add the create method pane
+                    this.panelTmpCode.Controls.Clear();
+                    TmpCreateQRCode tmpPane = new TmpCreateQRCode(qrPolicy);
+                    tmpPane.Dock = DockStyle.Fill;
+                    
+                    this.panelTmpCode.Controls.Add(tmpPane);
                 }
                 else
                 {
                     //create the details pane
-                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.TemporaryQRCode, false);
+                    this.panelTmpCode.Controls.Clear();
+                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.TemporaryQRCode, false, qrPolicy);
                     qrCodeDetails.Dock = DockStyle.Fill;
+                    qrCodeDetails.Name = "panelTmpDetails";
                     //add it to the window
                     this.panelTmpCode.Controls.Add(qrCodeDetails);
                 }
                 
             }
-                
-            
-           
+
             this.Validate();
         }
     }

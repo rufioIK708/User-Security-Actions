@@ -34,7 +34,9 @@
             this.labelTmpNoStdMsg = new System.Windows.Forms.Label();
             this.panelPin = new System.Windows.Forms.TabPage();
             this.labelPinNoQrCode = new System.Windows.Forms.Label();
+            this.stdCreateQRCode1 = new User_Security_Actions.StdCreateQRCode();
             this.tabControl.SuspendLayout();
+            this.panelStdCode.SuspendLayout();
             this.panelTmpCode.SuspendLayout();
             this.panelPin.SuspendLayout();
             this.SuspendLayout();
@@ -55,13 +57,13 @@
             // 
             // panelStdCode
             // 
+            this.panelStdCode.Controls.Add(this.stdCreateQRCode1);
             this.panelStdCode.Location = new System.Drawing.Point(4, 22);
             this.panelStdCode.Name = "panelStdCode";
             this.panelStdCode.Padding = new System.Windows.Forms.Padding(3);
             this.panelStdCode.Size = new System.Drawing.Size(615, 307);
             this.panelStdCode.TabIndex = 0;
             this.panelStdCode.Text = "Standard Qr Code";
-            //this.panelStdCode.UseVisualStyleBackColor = true;
             // 
             // panelTmpCode
             // 
@@ -110,6 +112,14 @@
     " Standard QR Code tab.";
             this.labelPinNoQrCode.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // stdCreateQRCode1
+            // 
+            this.stdCreateQRCode1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.stdCreateQRCode1.Location = new System.Drawing.Point(3, 3);
+            this.stdCreateQRCode1.Name = "stdCreateQRCode1";
+            this.stdCreateQRCode1.Size = new System.Drawing.Size(609, 301);
+            this.stdCreateQRCode1.TabIndex = 0;
+            // 
             // qrCodeWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -119,6 +129,7 @@
             this.Name = "qrCodeWindow";
             this.Text = "qrCodeWindow";
             this.tabControl.ResumeLayout(false);
+            this.panelStdCode.ResumeLayout(false);
             this.panelTmpCode.ResumeLayout(false);
             this.panelTmpCode.PerformLayout();
             this.panelPin.ResumeLayout(false);
@@ -132,8 +143,9 @@
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage panelTmpCode;
         private System.Windows.Forms.TabPage panelPin;
-        private System.Windows.Forms.Panel panelStdCode;
         private System.Windows.Forms.Label labelPinNoQrCode;
         private System.Windows.Forms.Label labelTmpNoStdMsg;
+        private StdCreateQRCode stdCreateQRCode1;
+        private System.Windows.Forms.TabPage panelStdCode;
     }
 }
