@@ -53,6 +53,8 @@ namespace User_Security_Actions
         public const string hardOathAuthMethod = "#microsoft.graph.hardwareOathAuthenticationMethod";
         public const string fido2AuthMethod = "#microsoft.graph.fido2AuthenticationMethod";
         public const string emailAuthMethod = "#microsoft.graph.emailAuthenticationMethod";
+        public const string qrCodeAuthMethod = "#microsoft.graph.qrCodePinAuthenticationMethod";
+        
 
         // - - These should not be used anymore and have been deprecated, but have been left in for backwards compatibility?
         public const string appPasswordAuthMethod = "#microsoft.graph.appPasswordAuthenticationMethod";
@@ -66,7 +68,8 @@ namespace User_Security_Actions
         // - - token and graph client 
         public static InteractiveBrowserCredential? token = null;
         public static AccessToken? accessToken = null;
-        public static GraphServiceClient? graphClient = null; 
+        public static GraphServiceClient? graphClient = null;
+        public static QrCodePinAuthenticationMethodConfiguration? qrPolicy = null;
         // - - string to read input from users
         public static string? input = null;
 #nullable disable

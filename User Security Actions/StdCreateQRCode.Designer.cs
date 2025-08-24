@@ -39,7 +39,7 @@
             this.labelStdActLater = new System.Windows.Forms.Label();
             this.labelEnterPin = new System.Windows.Forms.Label();
             this.buttonCreateQrCode = new System.Windows.Forms.Button();
-            this.maskedTextBoxPin = new System.Windows.Forms.MaskedTextBox();
+            this.textBoxPinEntry = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -59,7 +59,7 @@
             this.tableLayoutPanel1.Controls.Add(this.labelStdActLater, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.labelEnterPin, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.buttonCreateQrCode, 1, 5);
-            this.tableLayoutPanel1.Controls.Add(this.maskedTextBoxPin, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.textBoxPinEntry, 1, 4);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -208,16 +208,15 @@
             this.buttonCreateQrCode.UseVisualStyleBackColor = true;
             this.buttonCreateQrCode.Click += new System.EventHandler(this.buttonCreateQrCode_Click);
             // 
-            // maskedTextBoxPin
+            // textBoxPinEntry
             // 
-            this.maskedTextBoxPin.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.maskedTextBoxPin.Location = new System.Drawing.Point(162, 182);
-            this.maskedTextBoxPin.Margin = new System.Windows.Forms.Padding(3, 10, 3, 3);
-            this.maskedTextBoxPin.Mask = "00000000";
-            this.maskedTextBoxPin.Name = "maskedTextBoxPin";
-            this.maskedTextBoxPin.Size = new System.Drawing.Size(181, 20);
-            this.maskedTextBoxPin.TabIndex = 11;
-            this.maskedTextBoxPin.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.textBoxPinEntry.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxPinEntry.Location = new System.Drawing.Point(162, 184);
+            this.textBoxPinEntry.Margin = new System.Windows.Forms.Padding(3, 12, 3, 3);
+            this.textBoxPinEntry.Name = "textBoxPinEntry";
+            this.textBoxPinEntry.Size = new System.Drawing.Size(181, 20);
+            this.textBoxPinEntry.TabIndex = 11;
+            this.textBoxPinEntry.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // StdCreateQRCode
             // 
@@ -245,6 +244,6 @@
         private System.Windows.Forms.Label labelStdActLater;
         private System.Windows.Forms.Label labelEnterPin;
         private System.Windows.Forms.Button buttonCreateQrCode;
-        private System.Windows.Forms.MaskedTextBox maskedTextBoxPin;
+        private System.Windows.Forms.TextBox textBoxPinEntry;
     }
 }

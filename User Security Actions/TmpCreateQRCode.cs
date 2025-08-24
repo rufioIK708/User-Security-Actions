@@ -18,7 +18,7 @@ namespace User_Security_Actions
         int tmpDefaultLifetime = 3;
         QrCodePinAuthenticationMethodConfiguration qrPolicyPass;
 
-        public TmpCreateQRCode(QrCodePinAuthenticationMethodConfiguration qrPolicy)
+        public TmpCreateQRCode()
         {
             InitializeComponent();
             numericUpDownLifetime.Value = tmpDefaultLifetime;
@@ -26,17 +26,18 @@ namespace User_Security_Actions
             numericUpDownLifetime.Minimum = tmpMinLifetime;
             qrActLaterDatePicker.Value = DateTime.Now;
             qrActLaterTimePicker.Value = DateTime.Now;
-            this.qrPolicyPass = qrPolicy;
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
+            //the check box is checked, show the activate later controls
             if (checkBoxActLater.Checked)
             {
                 labelTmpActLater.Visible = true;
                 qrActLaterDatePicker.Visible = true;
                 qrActLaterTimePicker.Visible = true;
             }
+            //the checkbox is unchecked, remove the activate later controls
             else
             {
                 labelTmpActLater.Visible = false;
@@ -65,7 +66,6 @@ namespace User_Security_Actions
             //set the expiration date, based on start datetime
             newCode.ExpireDateTime = startDateTime.AddHours((int)numericUpDownLifetime.Value);
 
-
             try
             {
                 //create the new code
@@ -73,7 +73,7 @@ namespace User_Security_Actions
                 //clear and redraw the pane
                 Control parent = this.Parent;
                 parent.Controls.Clear();
-                QrCodeDetails pane = new QrCodeDetails(returnedMethod, false, qrPolicyPass);
+                QrCodeDetails pane = new QrCodeDetails(returnedMethod, false);
                 pane.Dock = DockStyle.Fill;
                 parent.Controls.Add(pane);
             }

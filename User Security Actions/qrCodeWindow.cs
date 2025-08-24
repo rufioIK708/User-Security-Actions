@@ -21,12 +21,12 @@ namespace User_Security_Actions
             InitializeComponent();
         }
 
-        public qrCodeWindow(GraphCalls.QrCodePinAuthenticationMethod qrCodeMethod,
-            QrCodePinAuthenticationMethodConfiguration qrPolicy)
+        public qrCodeWindow(GraphCalls.QrCodePinAuthenticationMethod qrCodeMethod)
         {
             InitializeComponent();
 
-            this.qrPolicy = qrPolicy;
+            bool isStdPane = true;
+            bool isTmpPane = false;
 
             if(null == qrCodeMethod || null == qrCodeMethod.Pin)
             {
@@ -46,7 +46,7 @@ namespace User_Security_Actions
                 {
                     //add the create method pane
                     this.panelStdCode.Controls.Clear();
-                    StdCreateQRCode stdPane = new StdCreateQRCode(true, qrPolicy);
+                    StdCreateQRCode stdPane = new StdCreateQRCode(isStdPane);
                     stdPane.Dock = DockStyle.Fill;
                     this.panelStdCode.Controls.Add(stdPane);
                 }
@@ -54,7 +54,8 @@ namespace User_Security_Actions
                 {
                     //create the details pane
                     this.panelStdCode.Controls.Clear();
-                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.StandardQRCode, true, qrPolicy);
+                    QrCodeDetails qrCodeDetails = 
+                        new QrCodeDetails(qrCodeMethod.StandardQRCode, isStdPane);
                     qrCodeDetails.Dock = DockStyle.Fill;
                     qrCodeDetails.Name = "panelStdDetails";
                     //add it to the window
@@ -66,7 +67,7 @@ namespace User_Security_Actions
                 {
                     //add the create method pane
                     this.panelTmpCode.Controls.Clear();
-                    TmpCreateQRCode tmpPane = new TmpCreateQRCode(qrPolicy);
+                    TmpCreateQRCode tmpPane = new TmpCreateQRCode();
                     tmpPane.Dock = DockStyle.Fill;
                     
                     this.panelTmpCode.Controls.Add(tmpPane);
@@ -75,7 +76,7 @@ namespace User_Security_Actions
                 {
                     //create the details pane
                     this.panelTmpCode.Controls.Clear();
-                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.TemporaryQRCode, false, qrPolicy);
+                    QrCodeDetails qrCodeDetails = new QrCodeDetails(qrCodeMethod.TemporaryQRCode, isTmpPane);
                     qrCodeDetails.Dock = DockStyle.Fill;
                     qrCodeDetails.Name = "panelTmpDetails";
                     //add it to the window

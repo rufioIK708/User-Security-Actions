@@ -23,8 +23,8 @@ namespace User_Security_Actions
         static string QR_CODE_STANDARD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/standardQrCode";
         static string QR_CODE_TEMPORARY_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
         static string QR_CODE_PIN_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
-        static string QR_CODE_METHOD_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCodePinAuthenticationMethod",  "standardQRCode": {"expireDateTime": "{0}","startDateTime": "{1}"}, "pin": {"code": "{2}"}}""";
-        static string QR_CODE_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCode", "expireDateTime": "{0}", "startDateTime": "{1}",}""";
+        //static string QR_CODE_METHOD_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCodePinAuthenticationMethod",  "standardQRCode": {"expireDateTime": "{0}","startDateTime": "{1}"}, "pin": {"code": "{2}"}}""";
+        //static string QR_CODE_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCode", "expireDateTime": "{0}", "startDateTime": "{1}",}""";
 
         public enum ErrorCorrectionLevel
         {
@@ -183,9 +183,9 @@ namespace User_Security_Actions
             }
         }
 
-        public static async Task<bool> ResetQrCodePin(String newPin)
+        public static async Task<QrPin> ResetQrCodePin()
         {
-            bool successful = false;
+            QrPin returnedPin = null;
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_PIN_ADDRESS_TEMPLATE, userId);
 
@@ -201,12 +201,7 @@ namespace User_Security_Actions
                 httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-                QrPin pin = new QrPin();
-
-                if (null != newPin)
-                    pin.Code = newPin;
-
-                String patchPin = JsonSerializer.Serialize(pin);
+                String patchPin = $"{{\r\n  \"@odata.type\": \"#microsoft.graph.qrPin\",\r\n  \"code\": \"\",\r\n}}";
 
                 var content = new StringContent(patchPin, Encoding.UTF8, "application/json");
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
@@ -224,10 +219,19 @@ namespace User_Security_Actions
                     throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
                 }
                 else
-                    successful = true;
+                {
+                    try
+                    {
+                        var deserialize = await DeserializeObject<QrPin>
+                            (await response.Content.ReadAsStringAsync());
+
+                        returnedPin = deserialize;
+                    }
+                    catch (Exception ex) { throw ex; }
+                }
             }
 
-            return successful;
+            return returnedPin;
         }
 
         public static async Task<QrCode> CreateStandardQrCode(QrCode newQrCode)
@@ -252,16 +256,6 @@ namespace User_Security_Actions
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
                 String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
-                
-
-                /*try
-                {
-                    patchCode = String.Format(QR_CODE_CONTENT_TEMPLATE, newQrCode.ExpireDateTime.Value.ToUniversalTime().ToString(),
-                        newQrCode.StartDateTime.Value.ToUniversalTime().ToString());
-                }
-                catch (FormatException e) { MessageBox.Show("this was a format exception\n" + e.Message); }
-                catch (ArgumentNullException e) { MessageBox.Show("This was a null arg error\n" + e.Message); }*/
-
 
                 var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)

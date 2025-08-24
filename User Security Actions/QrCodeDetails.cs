@@ -22,19 +22,47 @@ namespace User_Security_Actions
         {
             InitializeComponent();
         }
-        public QrCodeDetails(GraphCalls.QrCode qrCode, bool isStandard,
-            QrCodePinAuthenticationMethodConfiguration qrPolicy)
+        public QrCodeDetails(GraphCalls.QrCode qrCode, bool isStandard)
         {
             InitializeComponent();
 
-            this.qrPolicyPass = qrPolicy;
+            string filter = "PNG Image|*.png|JPEG Image|*.jpg|Bitmap Image|*.bmp";
+            string title = "Save QR Code Image";
+            string filename = "qrcode - " + Program.user.DisplayName;
+            string save = "Save Image";
+            string tooltip = "Right-click to save this image";
+            string timeFormat = "{0:MMM d, yyyy at hh:mm}";
 
             if (null != qrCode)
             {
                 if (null != qrCode.image)
                 {
+                    //context menu for image
+                    ContextMenuStrip contextMenu = new ContextMenuStrip();
+                    ToolStripMenuItem saveItem = new ToolStripMenuItem(save);
+                    contextMenu.Items.Add(saveItem);
+
+                    saveItem.Click += (sender, e) =>
+                    {
+                        using (SaveFileDialog saveDialog = new SaveFileDialog())
+                        {
+                            saveDialog.Filter = filter;
+                            saveDialog.Title = title;
+                            saveDialog.FileName = filename;
+
+                            if (saveDialog.ShowDialog() == DialogResult.OK)
+                            {
+                                pictureBoxQrCode.Image.Save(saveDialog.FileName);
+                            }
+                        }
+                    };
+
                     System.Drawing.Image image = ConvetSvgToImage(qrCode.image.BinaryValue);
                     pictureBoxQrCode.Image = image;
+                    pictureBoxQrCode.ContextMenuStrip = contextMenu;
+
+                    ToolTip toolTip = new ToolTip();
+                    toolTip.SetToolTip(pictureBoxQrCode, tooltip);
                 }
                     
             
@@ -92,7 +120,7 @@ namespace User_Security_Actions
                     await GraphCalls.DeleteStandardQrCode();
                     Control parent = this.Parent; 
                     parent.Controls.Clear();
-                    StdCreateQRCode pane = new StdCreateQRCode(true, qrPolicyPass);
+                    StdCreateQRCode pane = new StdCreateQRCode(true);
                     pane.Dock = DockStyle.Fill;
                     parent.Controls.Add(pane);
                 }
@@ -110,7 +138,7 @@ namespace User_Security_Actions
                     await GraphCalls.DeleteTemporaryQrCode();
                     Control parent = this.Parent;
                     parent.Controls.Clear();
-                    TmpCreateQRCode pane = new TmpCreateQRCode(qrPolicyPass);
+                    TmpCreateQRCode pane = new TmpCreateQRCode();
                     pane.Dock = DockStyle.Fill;
                     parent.Controls.Add(pane);
                 }
