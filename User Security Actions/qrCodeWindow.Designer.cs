@@ -29,14 +29,14 @@
         private void InitializeComponent()
         {
             this.tabControl = new System.Windows.Forms.TabControl();
-            this.stdQrCodePage = new System.Windows.Forms.TabPage();
-            this.panelStdCode = new System.Windows.Forms.Panel();
+            this.panelStdCode = new System.Windows.Forms.TabPage();
             this.panelTmpCode = new System.Windows.Forms.TabPage();
+            this.labelTmpNoStdMsg = new System.Windows.Forms.Label();
             this.panelPin = new System.Windows.Forms.TabPage();
             this.labelPinNoQrCode = new System.Windows.Forms.Label();
-            this.labelTmpNoStdMsg = new System.Windows.Forms.Label();
+            this.stdCreateQRCode1 = new User_Security_Actions.StdCreateQRCode();
             this.tabControl.SuspendLayout();
-            this.stdQrCodePage.SuspendLayout();
+            this.panelStdCode.SuspendLayout();
             this.panelTmpCode.SuspendLayout();
             this.panelPin.SuspendLayout();
             this.SuspendLayout();
@@ -46,7 +46,7 @@
             this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl.Controls.Add(this.stdQrCodePage);
+            this.tabControl.Controls.Add(this.panelStdCode);
             this.tabControl.Controls.Add(this.panelTmpCode);
             this.tabControl.Controls.Add(this.panelPin);
             this.tabControl.Location = new System.Drawing.Point(13, 13);
@@ -55,24 +55,15 @@
             this.tabControl.Size = new System.Drawing.Size(623, 333);
             this.tabControl.TabIndex = 0;
             // 
-            // stdQrCodePage
-            // 
-            this.stdQrCodePage.Controls.Add(this.panelStdCode);
-            this.stdQrCodePage.Location = new System.Drawing.Point(4, 22);
-            this.stdQrCodePage.Name = "stdQrCodePage";
-            this.stdQrCodePage.Padding = new System.Windows.Forms.Padding(3);
-            this.stdQrCodePage.Size = new System.Drawing.Size(615, 307);
-            this.stdQrCodePage.TabIndex = 0;
-            this.stdQrCodePage.Text = "Standard Qr Code";
-            this.stdQrCodePage.UseVisualStyleBackColor = true;
-            // 
             // panelStdCode
             // 
-            this.panelStdCode.Location = new System.Drawing.Point(3, 6);
+            this.panelStdCode.Controls.Add(this.stdCreateQRCode1);
+            this.panelStdCode.Location = new System.Drawing.Point(4, 22);
             this.panelStdCode.Name = "panelStdCode";
-            this.panelStdCode.Size = new System.Drawing.Size(606, 295);
+            this.panelStdCode.Padding = new System.Windows.Forms.Padding(3);
+            this.panelStdCode.Size = new System.Drawing.Size(615, 307);
             this.panelStdCode.TabIndex = 0;
-            this.panelStdCode.Visible = false;
+            this.panelStdCode.Text = "Standard Qr Code";
             // 
             // panelTmpCode
             // 
@@ -84,6 +75,20 @@
             this.panelTmpCode.TabIndex = 1;
             this.panelTmpCode.Text = "Temporary Qr Code";
             this.panelTmpCode.UseVisualStyleBackColor = true;
+            // 
+            // labelTmpNoStdMsg
+            // 
+            this.labelTmpNoStdMsg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelTmpNoStdMsg.AutoSize = true;
+            this.labelTmpNoStdMsg.Location = new System.Drawing.Point(182, 133);
+            this.labelTmpNoStdMsg.Name = "labelTmpNoStdMsg";
+            this.labelTmpNoStdMsg.Size = new System.Drawing.Size(278, 26);
+            this.labelTmpNoStdMsg.TabIndex = 0;
+            this.labelTmpNoStdMsg.Text = "There is no QrCodeAuthentication method configured yet.\r\nPlease create one in the" +
+    " Standard QR Code tab.\r\n";
+            this.labelTmpNoStdMsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // panelPin
             // 
@@ -107,19 +112,13 @@
     " Standard QR Code tab.";
             this.labelPinNoQrCode.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // labelTmpNoStdMsg
+            // stdCreateQRCode1
             // 
-            this.labelTmpNoStdMsg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelTmpNoStdMsg.AutoSize = true;
-            this.labelTmpNoStdMsg.Location = new System.Drawing.Point(182, 133);
-            this.labelTmpNoStdMsg.Name = "labelTmpNoStdMsg";
-            this.labelTmpNoStdMsg.Size = new System.Drawing.Size(278, 26);
-            this.labelTmpNoStdMsg.TabIndex = 0;
-            this.labelTmpNoStdMsg.Text = "There is no QrCodeAuthentication method configured yet.\r\nPlease create one in the" +
-    " Standard QR Code tab.\r\n";
-            this.labelTmpNoStdMsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.stdCreateQRCode1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.stdCreateQRCode1.Location = new System.Drawing.Point(3, 3);
+            this.stdCreateQRCode1.Name = "stdCreateQRCode1";
+            this.stdCreateQRCode1.Size = new System.Drawing.Size(609, 301);
+            this.stdCreateQRCode1.TabIndex = 0;
             // 
             // qrCodeWindow
             // 
@@ -130,7 +129,7 @@
             this.Name = "qrCodeWindow";
             this.Text = "qrCodeWindow";
             this.tabControl.ResumeLayout(false);
-            this.stdQrCodePage.ResumeLayout(false);
+            this.panelStdCode.ResumeLayout(false);
             this.panelTmpCode.ResumeLayout(false);
             this.panelTmpCode.PerformLayout();
             this.panelPin.ResumeLayout(false);
@@ -142,11 +141,11 @@
         #endregion
 
         private System.Windows.Forms.TabControl tabControl;
-        private System.Windows.Forms.TabPage stdQrCodePage;
         private System.Windows.Forms.TabPage panelTmpCode;
         private System.Windows.Forms.TabPage panelPin;
-        private System.Windows.Forms.Panel panelStdCode;
         private System.Windows.Forms.Label labelPinNoQrCode;
         private System.Windows.Forms.Label labelTmpNoStdMsg;
+        private StdCreateQRCode stdCreateQRCode1;
+        private System.Windows.Forms.TabPage panelStdCode;
     }
 }

@@ -18,24 +18,52 @@ namespace User_Security_Actions
             InitializeComponent();
         }
 
-        public PinDetails(QrPin pin)
+        public PinDetails(GraphCalls.QrPin pin)
         {
             InitializeComponent();
-            if(null != pin.Id)
+            if (null == pin.Id)
+                labelPinIdDisplay.Text = "NULL";
+            else
                 labelPinIdDisplay.Text = pin.Id;
+
             if(pin.CreatedDateTime.HasValue)
                 labelPinCreatedDisplay.Text = pin.CreatedDateTime.Value.ToLocalTime().ToString();
+
             if (pin.UpdatedDateTime.HasValue)
                 labelPinUpdatedDisplay.Text = pin.UpdatedDateTime.Value.ToLocalTime().ToString();
+
             if (pin.ForceChangePinNextSignIn.HasValue)
                 labelPinForceChangeDisplay.Text = pin.ForceChangePinNextSignIn.ToString();
-            if (null != pin.Code)
+
+            if (null == pin.Code)
+                labelPinNewPinDisplay.Text = "N/A";
+            else
                 labelPinNewPinDisplay.Text = pin.Code;
+
+            if (Program.qrPolicy.PinLength.HasValue)
+                labelPinMinLengthDisplay.Text = Program.qrPolicy.PinLength.ToString();
         }
 
-        private void buttonResetPin_Click(object sender, EventArgs e)
+        private async void buttonResetPin_Click(object sender, EventArgs e)
         {
+            this.Cursor = Cursors.WaitCursor;
             
+            try
+            {
+                GraphCalls.QrPin returnedPin = await GraphCalls.ResetQrCodePin();
+
+                Control parent = this.Parent;
+                parent.Controls.Clear();
+                PinDetails pane = new PinDetails(returnedPin);
+                pane.Dock = DockStyle.Fill;
+                parent.Controls.Add(pane);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            
+            this.Cursor = Cursors.Default;
         }
     }
 }

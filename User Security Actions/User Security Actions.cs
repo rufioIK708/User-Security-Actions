@@ -5,6 +5,7 @@ using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
 //using Microsoft.Graph.Beta.Models.Networkaccess;
 using Microsoft.Graph.Beta.Models.ODataErrors;
+using Microsoft.Graph.Beta.Reports.ServiceActivity.GetActiveUserMetricsForDesktopMailByReadEmailWithInclusiveIntervalStartDateTimeWithExclusiveIntervalEndDateTimeWithAggregationIntervalInMinutes;
 using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
 using System;
 using System.Collections.Generic;
@@ -80,6 +81,8 @@ namespace User_Security_Actions
                     buttonRevokeSessions.Enabled = true;
                     buttonAddTapMethod.Show();
                     buttonAddTapMethod.Enabled = true;
+                    buttonQrCodeAuth.Show();
+                    buttonQrCodeAuth.Enabled = true;
 
                     //specific button text based on account status
                     bool? enabled = Program.user.AccountEnabled;
@@ -114,6 +117,8 @@ namespace User_Security_Actions
                     buttonRevokeSessions.Enabled = false;
                     buttonAddTapMethod.Hide();
                     buttonAddTapMethod.Enabled = false;
+                    buttonQrCodeAuth.Hide();
+                    buttonQrCodeAuth.Enabled = false;
                 }
             }
             else
@@ -179,8 +184,6 @@ namespace User_Security_Actions
             else
                 modifyRichTextBox("NULL");
 
-
-
         }
 
         //function to get the user and return the user object
@@ -216,124 +219,6 @@ namespace User_Security_Actions
             displayBox.AppendText(message);
             displayBox.ScrollToCaret();
         }
-
-        public async void printMFAData(List<MFAData> list)
-        {
-            modifyRichTextBox("\n");
-
-            //display the number of methods
-            modifyRichTextBox($"\nNumber of AuthMehtods:  {list.Count}\n");
-
-            //loop through the list of MFA methods
-            foreach (var item in list)
-            {
-                if (null != item.OdataType)
-                {
-                    //Replace the OdataType with a more readable string
-                    switch (item.OdataType)
-                    {
-                        case Program.platformCredMethod:
-                            modifyRichTextBox($"Type of Method : Platform Credential\n");
-                            break;
-
-                        case Program.wHFBAuthMethod:
-                            modifyRichTextBox($"Type of Method : Windows Hello for Business\n");
-                            break;
-
-                        case Program.tAPAuthMethod:
-                            modifyRichTextBox($"Type of Method : Temporary Access Pass\n");
-                            break;
-
-                        case Program.softOathAuthMethod:
-                            modifyRichTextBox($"Type of Method : Software Oath Token\n");
-                            break;
-
-                        case Program.phoneAuthMethod:
-                            modifyRichTextBox($"Type of Method : Phone Authentication\n");
-                            try
-                            {
-                                var result = await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PhoneMethods[item.Id].GetAsync();
-                                modifyRichTextBox($"Phone number   : {result.PhoneNumber}\n");
-                                modifyRichTextBox($"Phone type     : {result.PhoneType}\n");
-                                modifyRichTextBox($"SMS SignInState: {result.SmsSignInState}\n");
-                            }
-                            catch (Exception err)
-                            {
-                                modifyRichTextBox("\nError getting phone method. Please try again.\n"
-                                    + "\n" + err.Message);
-                            }
-                            break;
-
-                        case Program.passwordAuthMethod:
-                            modifyRichTextBox($"Type of Method : Password\n");
-                            break;
-
-                        case Program.mSAuthenticatorAuthMethod:
-                            modifyRichTextBox($"Type of Method : Microsoft Authenticator\n");
-                            break;
-
-                        case Program.hardOathAuthMethod:
-                            modifyRichTextBox($"Type of Method : Hardware Oath Token\n");
-                            break;
-
-                        case Program.fido2AuthMethod:
-                            modifyRichTextBox($"Type of Method : Fido2 Passkey\n");
-                            break;
-
-                        case Program.emailAuthMethod:
-                            modifyRichTextBox($"Type of Method : Alternate E-Mail\n");
-                            break;
-
-                        //these are no longer listed but are still included just in case
-                        case Program.phoneAppNotificationAuthMethhod:
-                            modifyRichTextBox($"Type of Method : Phone App Notification\n");
-                            break;
-
-                        case Program.appPasswordAuthMethod:
-                            modifyRichTextBox($"Type of Method : App Password\n");
-                            break;
-
-                        case Program.phoneAppOTPAuthMethod:
-                            modifyRichTextBox($"Type of Method : Phone App OTP\n");
-                            break;
-
-                        case Program.passwordlessMSAuthenticatorMethod:
-                            modifyRichTextBox($"Type of Method : Passwordless Microsoft Authenticator\n");
-                            break;
-
-
-                        //incase we get a new method type
-                        default:
-                            modifyRichTextBox($"Type of Method : {item.OdataType}\n");
-                            break;
-                    }
-                }
-
-                //check if the rest of the properties are null before attempting to display
-                if (null != item.Id)
-                    modifyRichTextBox($"ID             : {item.Id}\n");
-                if (null != item.CreatedDateTime)
-                    modifyRichTextBox($"CreatedDateTime: {item.CreatedDateTime}\n");
-                if (null != item.AdditionalData)
-                {
-                    foreach (var entry in item.AdditionalData)
-                    {
-                        modifyRichTextBox($"Additional Data: {entry.Key}: {entry.Value}\n");
-                    }
-                }
-                if (null != item.BackingStore)
-                {
-                    foreach (var entry in item.BackingStore)
-                    {
-                        modifyRichTextBox($"Backing Store: {entry.Key}: {entry.Value}\n");
-                    }
-                }
-
-                modifyRichTextBox(Environment.NewLine);
-            }
-        }
-
 
         //method to get and print the authetication methods for a user
         public async Task<List<AuthenticationMethod>> getAndPrintMFA(bool print)
@@ -371,6 +256,7 @@ namespace User_Security_Actions
             {
                 modifyRichTextBox($"\n \nRemoving method: {method.OdataType} with ID: {method.Id}\n");
 
+                
                 switch (method.OdataType)
                 {
                     //WHFB method
@@ -534,6 +420,8 @@ namespace User_Security_Actions
                 // if we leave the loop, no match was found
                 MessageBox.Show("Method " + Program.input + " deleted.");
             }
+
+            this.Cursor = Cursors.Default;
         }
         private async void getUserMFA_Click(object sender, EventArgs e)
         {
@@ -602,6 +490,8 @@ namespace User_Security_Actions
             Program.admin = await Program.graphClient.Me.GetAsync();
             
             bool result = false;
+
+            DialogResult boxCloseMethod = 
             new textInput("Please enter the ObjectID/UPN of a user", "Select a User", false).ShowDialog();
 
             //copy input to new var
@@ -631,10 +521,10 @@ namespace User_Security_Actions
                     result = true;
 
                 /**********************
-                 * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
-                 * However, when calling Graph API, you are able to perform these actions on yourself.
-                 * This check is not neccessary, we'll let the API let us know when we are doing something we
-                 * shouldn't be, for now.
+                    * In Entra ID Web UI, you are unable to complete most of these actions on your own account.
+                    * However, when calling Graph API, you are able to perform these actions on yourself.
+                    * This check is not neccessary, we'll let the API let us know when we are doing something we
+                    * shouldn't be, for now.
 
                 if (Program.admin.Id == Program.user.Id)
                 {
@@ -668,6 +558,7 @@ namespace User_Security_Actions
                 //reset cancelled state and don't do anything else
                 Program.cancelled = false;
             }
+            
         }
 
         private async void updateImmutableId_Click(object sender, EventArgs e)
@@ -680,28 +571,41 @@ namespace User_Security_Actions
             labelMessage += "\nbelow or \"Clear\" to set it to null, or \"Cancel\" to stop.";
 
             //show a dialog box to get the new immutableID
-            new textInput(labelMessage, "Modify ImmutableId", false).ShowDialog();
+            DialogResult inputResult = new textInput(labelMessage, "Modify ImmutableId", false).ShowDialog();
 
-            //verify the input & act: update the immutableID, clear it, or no action
-            switch (Program.input.ToUpper())
+            if (DialogResult.OK == inputResult && null != Program.input)
             {
-                case ("CLEAR"):
-                    Program.user.OnPremisesImmutableId = null;
-                    break;
-                case ("CANCEL"):
-                    break;
-                default:
-                    Program.user.OnPremisesImmutableId = Program.input;
-                    break;
-            }
+                string input = Program.input;
+                Program.input = null;
+                bool update = false;
+                User updateUser = new();
 
-            try
-            {
-                await Program.graphClient.Users[Program.user.Id].PatchAsync(Program.user);
-            }
-            catch (ODataError err)
-            {
-                MessageBox.Show(err.Error + "\nError updating user: try again");
+                //verify the input : update the immutableID, clear it, or no action
+                switch (input.ToUpper().Trim())
+                {
+                    case ("CLEAR"):
+                        updateUser.OnPremisesImmutableId = null;
+                        update = true;
+                        break;
+                    case ("CANCEL"):
+                        break;
+                    default:
+                        updateUser.OnPremisesImmutableId = input;
+                        update = true;
+                        break;
+                }
+
+                if (update)
+                {
+                    try
+                    {
+                        await Program.graphClient.Users[Program.user.Id].PatchAsync(Program.user);
+                    }
+                    catch (ODataError err)
+                    {
+                        MessageBox.Show(err.Error + "\nError updating user: try again");
+                    }
+                }
             }
 
             //Get the updated user
@@ -718,42 +622,7 @@ namespace User_Security_Actions
             var methods = await MFAExtras.getUserMfaMethods();
 
             var passwordMethod = methods.Find(x => x.OdataType == Program.passwordAuthMethod);
-            /*****
-            //serialize the response
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonString = JsonSerializer.Serialize(response.Value, options);
-
-            //to verify the raw output
-            //modifyRichTextBox("\n" + jsonString);
-
-            //initialize a list of MFAData
-            var methods = new List<MFAData>();
-
-            //deserialize the JSON
-            try
-            {
-                methods = JsonSerializer.Deserialize<List<MFAData>>(jsonString);
-            }
-            catch (JsonException err)
-            {
-                MessageBox.Show("Error converting JSON\n" +
-                "error: " + err.Message + "\nadditional info : " + err.Data);
-            }
             
-
-            //isolate the password method
-            MFAData passwordMethod = new MFAData();
-
-            foreach (var authenticationMethod in methods)
-
-            {
-                if (authenticationMethod.OdataType == "#microsoft.graph.passwordAuthenticationMethod")
-                {
-                    passwordMethod = authenticationMethod;
-                    break;
-                }
-            }
-            *****/
 
             //label to show the message
             string labelMessage = "Reset the password for: " + Program.user.DisplayName;
@@ -761,57 +630,59 @@ namespace User_Security_Actions
                 "\nor \"System\" to let Entra generate one for you, " +
                 "\nor\"Cancel\" to stop.";
             string resetMessage = "\nThe user will have to use this \npassword to reset their password on \nnext login.";
-            new textInput(labelMessage, "Reset Password", false).ShowDialog();
+            DialogResult inputResult = new textInput(labelMessage, "Reset Password", false).ShowDialog();
 
-            string input = Program.input.Trim();
-            Program.input = null;
-            
-            //verify the input & act: reset the password or no action
-            switch (input.ToUpper())
+            if (DialogResult.OK == inputResult)
             {
-                case ("CANCEL"):
-                    break;
-                case ("SYSTEM"):
-                    //reset the password - let the system generate a password and display it
-                    try
-                    {
-                        //reset the password
-                        var requestBody = new Microsoft.Graph.Beta.Users.Item.Authentication.Methods.Item.ResetPassword.ResetPasswordPostRequestBody
+                string input = Program.input;
+                Program.input = null;
+
+                //reset the password
+                var requestBody = new Microsoft.Graph.Beta.Users.Item.Authentication
+                    .Methods.Item.ResetPassword.ResetPasswordPostRequestBody { };
+
+                //verify the input & act: reset the password or no action
+                switch (input.ToUpper().Trim())
+                {
+                    case ("CANCEL"):
+                        break;
+                    case ("SYSTEM"):
+                        //reset the password - let the system generate a password and display it
+                        try
                         {
-                        };
-                        var result = await Program.graphClient.Users[Program.user.Id].Authentication.Methods[passwordMethod.Id].
-                            ResetPassword.PostAsync(requestBody);
-                        //display the new password
-                        new textInput(resetMessage, "Password Reset Complete", result.NewPassword).ShowDialog();
-                    }
-                    catch (ODataError err)
-                    {
-                        MessageBox.Show(err.Error + "\nError resetting password: try again");
-                    }
+                            
 
-                    break;
-                case (""):
-                    MessageBox.Show("No password entered. Please try again.");
-                    break;
-                default:
-                    //reset the password
-                    try
-                    {
-                        await Program.graphClient.Users[Program.user.Id].Authentication.Methods[passwordMethod.Id].
-                            ResetPassword.PostAsync(new
-                                Microsoft.Graph.Beta.Users.Item.Authentication.Methods.
-                                Item.ResetPassword.ResetPasswordPostRequestBody
-                            {
-                                NewPassword = Program.input
-                            });
-                    }
-                    catch (ODataError err)
-                    {
-                        MessageBox.Show(err.Error + "\nError resetting password: try again");
-                    }
+                            var result = await Program.graphClient.Users[Program.user.Id].Authentication.Methods[passwordMethod.Id].
+                                ResetPassword.PostAsync(requestBody);
+                            //display the new password
+                            new textInput(resetMessage, "Password Reset Complete", result.NewPassword).ShowDialog();
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Error + "\nError resetting password: try again");
+                        }
 
-                    MessageBox.Show("Password reset for: " + Program.user.DisplayName + " is complete!");
-                    break;
+                        break;
+                    case (""):
+                        MessageBox.Show("No password entered. Please try again.");
+                        break;
+                    default:
+                        //reset the password
+                        try
+                        {
+                            requestBody.NewPassword = input; 
+
+                            await Program.graphClient.Users[Program.user.Id].Authentication.Methods[passwordMethod.Id].
+                                ResetPassword.PostAsync(requestBody);
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Error + "\nError resetting password: try again");
+                        }
+
+                        MessageBox.Show("Password reset for: " + Program.user.DisplayName + " is complete!");
+                        break;
+                }
             }
         }
 
@@ -851,7 +722,7 @@ namespace User_Security_Actions
             if (!Program.cancelled)
             {
                 //trim the input
-                string input = Program.input.Trim();
+                string input = Program.input;
 
                 //check if email method and add.
                 if (Program.methodType == MethodType.Email)
@@ -1055,7 +926,7 @@ namespace User_Security_Actions
 
 
 
-            MessageBox.Show("methods deleted");
+            //MessageBox.Show("methods deleted");
 
 
         }
@@ -1064,31 +935,35 @@ namespace User_Security_Actions
         {
             string labelMessage = "Please enter the ID of the method to remove.";
             labelMessage += "\nGet the methods first so you can see the IDs.";
+            string title = "Remove Authentication Method";
+
             bool successful = false;
-            new textInput(labelMessage, "Remove Authentication Method", false).ShowDialog();
-            string input = Program.input;
 
-            try
-            {
-                await deleteMethod(input);
-                successful = true;
-            }
-            catch (Exception err)
-            {
-                MessageBox.Show("Error removing method. Please try again."
-                    + "\n" + err.Message);
-            }
+            DialogResult inputResult = new textInput(labelMessage, title, false).ShowDialog();
 
-            if (successful)
+            if (DialogResult.OK == inputResult)
             {
-                //get the updated user
-                Program.user = await getUser(Program.user.UserPrincipalName);
-                printUserStatus(Program.user);
-                MessageBox.Show("Method removed for: " + Program.user.DisplayName);
-            }
-            else
-            {
-                MessageBox.Show("Error removing method. Please try again.");
+                string input = Program.input;
+                Program.input = null;
+
+                try
+                {
+                    await deleteMethod(input);
+                    successful = true;
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show("Error removing method. Please try again."
+                        + "\n" + err.Message);
+                }
+
+                if (successful)
+                {
+                    //get the updated user
+                    Program.user = await getUser(Program.user.UserPrincipalName);
+                    printUserStatus(Program.user);
+                    MessageBox.Show("Method removed for: " + Program.user.DisplayName);
+                }
             }
         }
 
@@ -1159,11 +1034,11 @@ namespace User_Security_Actions
                 MessageBox.Show(err.Message);
             }
 
-            if (null != output.standardQRCode)
+            if (null != output.StandardQRCode)
             {
-                if (null != output.standardQRCode.id)
+                if (null != output.StandardQRCode.id)
                 {
-                    MessageBox.Show(output.standardQRCode.id);
+                    MessageBox.Show(output.StandardQRCode.id);
                 }
                 else
                     MessageBox.Show("ID is null");
@@ -1289,9 +1164,80 @@ namespace User_Security_Actions
 
         private async void buttonQrCodeAuth_Click(object sender, EventArgs e)
         {
-            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+            this.Cursor = Cursors.WaitCursor;
 
-            new qrCodeWindow(qrCode).ShowDialog();
+            string messageDisabledError = "The method is disabled in the tenant by policy.\n" +
+                "Please enable the policy in Entra > Authentication Methods.";
+            string messagePolicyError = "Error getting the QrCode policy.\n";
+            string messageGroupAcquisitionError = "Error getting QR Code group information. Please try again.";
+            string messageGroupError = "The user is a excluded from the QR Code method\n"
+                + "due to inclusion into the group: {0}\n"
+                + "Please remove them from the group to continue.\n"
+                + "Other memberships could also exclude the user.";
+
+            QrCodePinAuthenticationMethodConfiguration qrPolicy = null;
+
+           
+            try
+            {
+                //get the policy for the tenant
+                qrPolicy = (QrCodePinAuthenticationMethodConfiguration)await
+                    Program.graphClient.Policies.AuthenticationMethodsPolicy
+                    .AuthenticationMethodConfigurations["QrCodePin"].GetAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(messagePolicyError + ex.Message);
+            }
+            
+
+            //get group exclusion if present
+            string groupQrResult = await checkGroupMembership(qrPolicy.ExcludeTargets);
+
+            //check policy settings to verify if we should continue
+            if (null != qrPolicy && AuthenticationMethodState.Disabled == qrPolicy.State)
+            {
+                //the policy disables the method
+                MessageBox.Show(messageDisabledError);
+            }
+            else if ("None" != groupQrResult)
+            {
+                //the user is in a group that is exlcuded.
+                Group excludeGroup = null;
+                try
+                {
+                    //get the group from the group ID
+                    excludeGroup = await Program.graphClient.Groups[groupQrResult].GetAsync();
+                }
+                catch (Exception err)
+                {
+                    MessageBox.Show(messageGroupAcquisitionError + "\n" + err.Message);
+                }
+
+                if (excludeGroup != null)
+                    MessageBox.Show(String.Format(messageGroupError, excludeGroup.DisplayName));
+                else
+                    MessageBox.Show(messageGroupError);
+            }
+            else
+            {
+                //get the method for the user
+                try
+                {
+                    Program.qrPolicy = qrPolicy;
+                    GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+                    //made it past the checks, show the window
+                    
+                    new qrCodeWindow(qrCode).ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+
+            this.Cursor = Cursors.Default;
+            
         }
     }
 }

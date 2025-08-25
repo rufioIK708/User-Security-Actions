@@ -415,6 +415,10 @@ namespace User_Security_Actions
                             output += $"\nEmail address   : {emailAuthMethod.EmailAddress}";
                             break;
 
+                        case QrCodePinAuthenticationMethod:
+                            var qrCodePinAuthMethod = (QrCodePinAuthenticationMethod)list[i];
+                            output += $"\nType of Method  : QR Code and PIN";
+                            break;
                         
                         //incase we get a new method type
                         default:
