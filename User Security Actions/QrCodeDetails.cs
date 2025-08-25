@@ -16,8 +16,6 @@ namespace User_Security_Actions
 {
     public partial class QrCodeDetails : UserControl
     {
-        QrCodePinAuthenticationMethodConfiguration qrPolicyPass;
-
         public QrCodeDetails()
         {
             InitializeComponent();

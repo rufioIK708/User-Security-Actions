@@ -16,7 +16,6 @@ namespace User_Security_Actions
         int tmpMinLifetime = 1;
         int tmpMaxLifetime = 12;
         int tmpDefaultLifetime = 3;
-        QrCodePinAuthenticationMethodConfiguration qrPolicyPass;
 
         public TmpCreateQRCode()
         {
