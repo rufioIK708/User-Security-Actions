@@ -22,12 +22,13 @@ namespace User_Security_Actions
         static string QR_CODE_TEMPORARY_TEMPLATE = "/users/{0}/authentication/qrcodePinMethod/temporaryQrCode";
         static string QR_CODE_PIN_TEMPLATE = "/users/{0}/authentication/qrcodePinMethod/pin";
 
-        public enum ErrorCorrectionLevel
+        public enum errorCorrectionLevel
         {
             l,
             m,
             q,
-            h
+            h,
+            unknownFutureValue
         }
 
         public class QrCodeImageDetails
