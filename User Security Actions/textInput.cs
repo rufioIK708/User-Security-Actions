@@ -114,6 +114,7 @@ namespace User_Security_Actions
 
 
                 //close the form
+                this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             else

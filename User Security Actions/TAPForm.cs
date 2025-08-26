@@ -95,9 +95,7 @@ namespace User_Security_Actions
             //MessageBox.Show((tapStartDate.Add(tapStartTime).ToUniversalTime()).ToString());
             try
             {
-                tapResult = await Program.graphClient.Users[Program.user.Id]
-                    .Authentication.TemporaryAccessPassMethods
-                    .PostAsync(requestBody);
+                tapResult = await GraphCalls.CreateTapMethod(requestBody);
             }
             catch (Exception err)
             {
