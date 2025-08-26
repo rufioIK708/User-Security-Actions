@@ -14,8 +14,6 @@ namespace User_Security_Actions
 {
     public partial class qrCodeWindow : Form
     {
-        QrCodePinAuthenticationMethodConfiguration qrPolicy;
-
         public qrCodeWindow()
         {
             InitializeComponent();

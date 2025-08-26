@@ -1,5 +1,5 @@
 ﻿using Azure;
-using Microsoft.Extensions.Options;
+using Microsoft.Graph.Beta.Models;
 using Microsoft.Graph.Beta.Models.ManagedTenants;
 using Microsoft.Identity.Client;
 using System;
@@ -18,13 +18,13 @@ namespace User_Security_Actions
     public class GraphCalls
     {
 #nullable enable
-        static string baseAddress = "https://graph.microsoft.com/beta";
-        static string QR_CODE_METHOD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod";
-        static string QR_CODE_STANDARD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/standardQrCode";
-        static string QR_CODE_TEMPORARY_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
-        static string QR_CODE_PIN_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
-        //static string QR_CODE_METHOD_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCodePinAuthenticationMethod",  "standardQRCode": {"expireDateTime": "{0}","startDateTime": "{1}"}, "pin": {"code": "{2}"}}""";
-        //static string QR_CODE_CONTENT_TEMPLATE = """{"@odata.type": "#microsoft.graph.qrCode", "expireDateTime": "{0}", "startDateTime": "{1}",}""";
+        const string baseAddress = "https://graph.microsoft.com/beta";
+        const string QR_CODE_METHOD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod";
+        const string QR_CODE_STANDARD_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/standardQrCode";
+        const string QR_CODE_TEMPORARY_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
+        const string QR_CODE_PIN_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
+        const string TAP_METHOD_ADDRESS_TEMPLATE = "/users/{0}/authentication/temporaryAccessPassMethods";
+
 
         public enum ErrorCorrectionLevel
         {
@@ -108,18 +108,18 @@ namespace User_Security_Actions
                     var options = new JsonSerializerOptions
                     {
                         AllowOutOfOrderMetadataProperties = true,
-                        PropertyNameCaseInsensitive = true                    
+                        PropertyNameCaseInsensitive = true
                     };
 
                     qrCodeMethod = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync(),options);
+                        (await response.Content.ReadAsStringAsync(), options);
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
-                
-                
+
+
                 // Return the deserialized object.
                 return qrCodeMethod;
             }
@@ -144,7 +144,7 @@ namespace User_Security_Actions
 
                 // Call the endpoint for the current user
                 var response = await httpClient.DeleteAsync(baseAddress + endpoint);
-                
+
                 //check the response and throw an exception if we are not successful
                 if (!response.IsSuccessStatusCode)
                 {
@@ -296,7 +296,7 @@ namespace User_Security_Actions
             //bool successful = false;
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
-            
+
             //if Program.accessToken is null, get a new one.
             if (null == Program.accessToken)
                 Program.accessToken = await UserAuthentication.GetAccessToken();
@@ -336,14 +336,14 @@ namespace User_Security_Actions
                         newCode = deserialize;
                     }
                     catch (Exception ex) { throw ex; }
-                   
+
                 }
             }
 
             return newCode;
         }
 
-        public static async Task<QrCodePinAuthenticationMethod> 
+        public static async Task<QrCodePinAuthenticationMethod>
             CreateQrCodeMethod(QrCodePinAuthenticationMethod newQrCode)
         {
             QrCodePinAuthenticationMethod newCodeMethod = null;
@@ -389,7 +389,7 @@ namespace User_Security_Actions
                         newCodeMethod = deserialize;
                     }
                     catch (Exception ex) { throw ex; }
-                    
+
                 }
             }
 
@@ -410,6 +410,62 @@ namespace User_Security_Actions
                 return deserialize;
             }
             catch (Exception e) { throw e; }
+        }
+
+        public static async Task<TemporaryAccessPassAuthenticationMethod> CreateTapMethod(TemporaryAccessPassAuthenticationMethod tapMethod)
+        {
+            TemporaryAccessPassAuthenticationMethod newTapMethod = null;
+            string userId = Program.user.Id;
+            string endpoint = string.Format(TAP_METHOD_ADDRESS_TEMPLATE, userId);
+
+            //if Program.accessToken is null, get a new one.
+            if (null == Program.accessToken)
+                Program.accessToken = await UserAuthentication.GetAccessToken();
+
+
+            using (var httpClient = new HttpClient())
+            {
+                string accessToken = Program.accessToken.Value.Token.ToString();
+                httpClient.BaseAddress = new Uri(baseAddress);
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                ////testing code starts here
+                string startDateTime = tapMethod.StartDateTime.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                string usable = tapMethod.IsUsableOnce.ToString().ToLower();
+                int lifetime = (int)tapMethod.LifetimeInMinutes;
+
+                string patchCode = $"{{ \"startDateTime\": \"{startDateTime}\"," +
+                    $"\"lifetimeInMinutes\": {lifetime}," +
+                    $"\"isUsableOnce\": {usable} }}";
+
+                var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
+
+                // Call the endpoint for the current user
+                var response = await httpClient.PostAsync(baseAddress + endpoint, content);
+
+                //check the response and throw an exception if we are not successful
+                if (!response.IsSuccessStatusCode)
+                {
+                    // You may want to handle errors more gracefully
+                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                }
+
+                //deserialize the JSON into objects.
+                try
+                {
+                    newTapMethod = await DeserializeObject<TemporaryAccessPassAuthenticationMethod>
+                        (await response.Content.ReadAsStringAsync());
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+
+
+                // Return the deserialized object.
+                return newTapMethod;
+            }
         }
     }
 }
