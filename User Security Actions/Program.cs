@@ -17,13 +17,15 @@ namespace User_Security_Actions
     {
         Mobile,
         AlternateMobile,
-        Office
+        Office,
+        None
     }
 
     enum MethodType
     {
         Email,
         Phone,
+        None
     }
 
      class Program
@@ -53,6 +55,7 @@ namespace User_Security_Actions
         public const string hardOathAuthMethod = "#microsoft.graph.hardwareOathAuthenticationMethod";
         public const string fido2AuthMethod = "#microsoft.graph.fido2AuthenticationMethod";
         public const string emailAuthMethod = "#microsoft.graph.emailAuthenticationMethod";
+        public const string qrCodeAuthMethod = "#microsoft.graph.qrCodeAuthenticationMethod";
 
         // - - These should not be used anymore and have been deprecated, but have been left in for backwards compatibility?
         public const string appPasswordAuthMethod = "#microsoft.graph.appPasswordAuthenticationMethod";

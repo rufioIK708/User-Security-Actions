@@ -50,6 +50,7 @@ namespace User_Security_Actions
 
         public class QrPin
         {
+            public string? id { get; set; }
             public string? code { get; set; }
             public DateTimeOffset? createdDateTime { get; set; }
             public Boolean? forceChangePinNextSignIn { get; set; }
@@ -67,7 +68,7 @@ namespace User_Security_Actions
         }
 #nullable disable
 
-        public static async Task<QrCodePinAuthenticationMethod> GetQrCodeMethodOne()
+        public static async Task<QrCodePinAuthenticationMethod> GetQrCodeMethod()
         {
             QrCodePinAuthenticationMethod qrCodeMethod = null;
             string userId = Program.user.Id;
@@ -84,7 +85,7 @@ namespace User_Security_Actions
                 httpClient.BaseAddress = new Uri(baseAddress);
                 httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
+                
                 // Call the endpoint for the current user
                 var response = await httpClient.GetAsync(baseAddress + endpoint);
 

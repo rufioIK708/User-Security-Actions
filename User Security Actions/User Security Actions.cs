@@ -217,7 +217,7 @@ namespace User_Security_Actions
             displayBox.ScrollToCaret();
         }
 
-        public async void printMFAData(List<MFAData> list)
+        public async void printMFAData(List<AuthenticationMethod> list)
         {
             modifyRichTextBox("\n");
 
@@ -252,8 +252,7 @@ namespace User_Security_Actions
                             modifyRichTextBox($"Type of Method : Phone Authentication\n");
                             try
                             {
-                                var result = await Program.graphClient.Users[Program.user.Id].Authentication.
-                                    PhoneMethods[item.Id].GetAsync();
+                                var result = (PhoneAuthenticationMethod)item;
                                 modifyRichTextBox($"Phone number   : {result.PhoneNumber}\n");
                                 modifyRichTextBox($"Phone type     : {result.PhoneType}\n");
                                 modifyRichTextBox($"SMS SignInState: {result.SmsSignInState}\n");
@@ -283,6 +282,10 @@ namespace User_Security_Actions
 
                         case Program.emailAuthMethod:
                             modifyRichTextBox($"Type of Method : Alternate E-Mail\n");
+                            break;
+
+                        case Program.qrCodeAuthMethod:
+                            modifyRichTextBox($"Type of Method : QR Code\n");
                             break;
 
                         //these are no longer listed but are still included just in case
@@ -322,13 +325,13 @@ namespace User_Security_Actions
                         modifyRichTextBox($"Additional Data: {entry.Key}: {entry.Value}\n");
                     }
                 }
-                if (null != item.BackingStore)
+                /*if (null != item.BackingStore)
                 {
                     foreach (var entry in item.BackingStore)
                     {
                         modifyRichTextBox($"Backing Store: {entry.Key}: {entry.Value}\n");
                     }
-                }
+                }*/
 
                 modifyRichTextBox(Environment.NewLine);
             }
@@ -338,7 +341,7 @@ namespace User_Security_Actions
         //method to get and print the authetication methods for a user
         public async Task<List<AuthenticationMethod>> getAndPrintMFA(bool print)
         {
-
+            
             string defaultMethod;
 
             Form1.ActiveForm.Cursor = Cursors.WaitCursor;
@@ -358,6 +361,7 @@ namespace User_Security_Actions
         //method to delete an MFA method
         public async Task deleteMethod(string id)
         {
+            string errorMessage = "\nError removing method: try again";
             bool successful = false;
             bool print = false;
 
@@ -383,7 +387,7 @@ namespace User_Security_Actions
                         }
                         catch (ODataError err)
                         {
-                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            MessageBox.Show(err.Message + errorMessage);
                             successful = false;
                         }
                         break;
@@ -397,7 +401,7 @@ namespace User_Security_Actions
                         }
                         catch (ODataError err)
                         {
-                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            MessageBox.Show(err.Message + errorMessage);
                             successful = false;
                         }
                         break;
@@ -516,7 +520,20 @@ namespace User_Security_Actions
                             successful = false;
                         }
                         break;
-
+                    //QrCode authentication method
+                    case Program.qrCodeAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                QrCodePinMethod.DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
                     case Program.appPasswordAuthMethod:
                         MessageBox.Show("Cannot remove App Passwords from here. My apologies.\n"
                             + "Please do so from the Entra portal");
@@ -845,13 +862,14 @@ namespace User_Security_Actions
 
             //label to show the message in the text box
             string labelMessage = "Please select Phone or Email.";
-            new textInput(labelMessage, "Add Authentication Method", true).ShowDialog();
+            DialogResult inputResponse = new textInput(labelMessage, "Add Authentication Method", true).ShowDialog();
 
             //check if the user cancelled
-            if (!Program.cancelled)
+            if (DialogResult.OK == inputResponse)
             {
                 //trim the input
                 string input = Program.input.Trim();
+                Program.input = null;
 
                 //check if email method and add.
                 if (Program.methodType == MethodType.Email)
@@ -874,6 +892,7 @@ namespace User_Security_Actions
                 }
                 else
                 {
+                    //its a phone method, check which type
                     switch (Program.phoneOptions)
                     {
                         case PhoneOption.Mobile:
@@ -948,6 +967,10 @@ namespace User_Security_Actions
                 //don't do anything and reset cancelled state
                 Program.cancelled = false;
             }
+
+            //reset the static vars for next time
+            Program.methodType = MethodType.None;
+            Program.phoneOptions = PhoneOption.None;
         }
        
 
@@ -1152,7 +1175,7 @@ namespace User_Security_Actions
             GraphCalls.QrCodePinAuthenticationMethod output = null;
             try
             {
-                output = await GraphCalls.GetQrCodeMethodOne();
+                output = await GraphCalls.GetQrCodeMethod();
             }
             catch (Exception err)
             {
@@ -1289,7 +1312,7 @@ namespace User_Security_Actions
 
         private async void buttonQrCodeAuth_Click(object sender, EventArgs e)
         {
-            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
+            GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethod();
 
             new qrCodeWindow(qrCode).ShowDialog();
         }
