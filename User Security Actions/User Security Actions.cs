@@ -494,7 +494,7 @@ namespace User_Security_Actions
             modifyRichTextBox("\n\nGetting MFA methods for user: " + Program.user.DisplayName + "\n\n");
             await getAndPrintMFA(print);
 
-            this.Cursor = Cursors.Default;
+            this.Cursor = Cursors.WaitCursor;
 
         }
 
@@ -511,7 +511,7 @@ namespace User_Security_Actions
             });
             //initialize the token
             Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
-
+            //UserAuthentication.SignInAndCreateClients(Program.scopes, Program.ClientId);
             
             
 

@@ -10,6 +10,8 @@ using Microsoft.Graph.Beta.Groups.Item.Sites.Item.ContentModels;
 using Microsoft.Graph.Beta.Models;
 using User_Security_Actions;
 using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using Microsoft.Identity.Client;
 
 namespace User_Security_Actions
 {
@@ -69,6 +71,8 @@ namespace User_Security_Actions
         public static InteractiveBrowserCredential? token = null;
         public static AccessToken? accessToken = null;
         public static GraphServiceClient? graphClient = null;
+        public static HttpClient? httpClient = null;
+        public static AuthenticationResult? authResult = null;
         public static QrCodePinAuthenticationMethodConfiguration? qrPolicy = null;
         // - - string to read input from users
         public static string? input = null;

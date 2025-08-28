@@ -80,9 +80,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -130,9 +129,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -159,9 +157,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -189,9 +186,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_PIN_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -222,7 +218,7 @@ namespace User_Security_Actions
                 {
                     try
                     {
-                        var deserialize = await DeserializeObject<QrPin>
+                        var deserialize = DeserializeObject<QrPin>
                             (await response.Content.ReadAsStringAsync());
 
                         returnedPin = deserialize;
@@ -243,9 +239,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -276,7 +271,7 @@ namespace User_Security_Actions
                 {
                     try
                     {
-                        var deserialize = await DeserializeObject<QrCode>
+                        var deserialize = DeserializeObject<QrCode>
                             (await response.Content.ReadAsStringAsync());
 
                         returnedCode = deserialize;
@@ -297,9 +292,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -330,7 +324,7 @@ namespace User_Security_Actions
                 {
                     try
                     {
-                        var deserialize = await DeserializeObject<QrCode>
+                        var deserialize = DeserializeObject<QrCode>
                             (await response.Content.ReadAsStringAsync());
 
                         newCode = deserialize;
@@ -352,9 +346,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -383,7 +376,7 @@ namespace User_Security_Actions
                     {
                         string jsonString = await response.Content.ReadAsStringAsync();
 
-                        var deserialize = await DeserializeObject<QrCodePinAuthenticationMethod>
+                        var deserialize = DeserializeObject<QrCodePinAuthenticationMethod>
                             (jsonString);
 
                         newCodeMethod = deserialize;
@@ -396,7 +389,7 @@ namespace User_Security_Actions
             return newCodeMethod;
         }
 
-        public static async Task<T> DeserializeObject<T>(string json)
+        public static T DeserializeObject<T>(string json)
         {
             var options = new JsonSerializerOptions
             {
@@ -418,9 +411,8 @@ namespace User_Security_Actions
             string userId = Program.user.Id;
             string endpoint = string.Format(TAP_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //if Program.accessToken is null, get a new one.
-            if (null == Program.accessToken)
-                Program.accessToken = await UserAuthentication.GetAccessToken();
+            //update the token
+            await UserAuthentication.GetAccessToken();
 
 
             using (var httpClient = new HttpClient())
@@ -454,7 +446,7 @@ namespace User_Security_Actions
                 //deserialize the JSON into objects.
                 try
                 {
-                    newTapMethod = await DeserializeObject<TemporaryAccessPassAuthenticationMethod>
+                    newTapMethod = DeserializeObject<TemporaryAccessPassAuthenticationMethod>
                         (await response.Content.ReadAsStringAsync());
                 }
                 catch (Exception ex)

@@ -719,12 +719,11 @@ namespace User_Security_Actions
             return isMember;
         }
 
-        public static async Task<string> getMethodName(string Id)
+        public static string getMethodName(string Id)
         {
             string result = null;
 
             var list = getUserMfaMethods();
-
 
             return result;
         }

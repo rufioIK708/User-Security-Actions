@@ -1,14 +1,18 @@
-﻿using System;
+﻿using Azure.Core;
+using Azure.Identity;
 using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
-using Azure.Identity;
-using System.Threading.Tasks;
+using Microsoft.Graph.Beta.Models.ManagedTenants;
 using Microsoft.Graph.Beta.Models.ODataErrors;
+using Microsoft.Identity.Client;
+using System;
+using System.IdentityModel;
 using System.Net.Http;
-using System.Windows.Forms;
-using Azure.Core;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace User_Security_Actions
 {
@@ -19,6 +23,28 @@ namespace User_Security_Actions
 
         }
 
+        public static async void SignInAndCreateClients(string[] scopes, string ClientId)
+        {
+            var publicClientApp = PublicClientApplicationBuilder
+            .Create(ClientId)
+            .WithTenantId(Program.TenantId)
+            .WithRedirectUri("http://localhost") // Required for interactive flow
+            .Build();
+
+            var authResult = await publicClientApp
+                .AcquireTokenInteractive(scopes)
+                .ExecuteAsync();
+
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+
+
+            var garaphClient = new GraphServiceClient(httpClient);
+
+            Program.graphClient = garaphClient;
+            Program.httpClient = httpClient;
+            Program.authResult = authResult;
+        }
         public static InteractiveBrowserCredential SignInUserAndGetToken (string[] scopes, string ClientId)
         {
 
@@ -35,10 +61,10 @@ namespace User_Security_Actions
             return interactiveBrowserCredential;
         }
 
-        public static async Task<AccessToken?> GetAccessToken()
+        public static async Task GetAccessToken()
         {
             TokenRequestContext tokenRequestContext;
-            AccessToken? accessToken = null;
+            
 
             if (null == Program.token)
                 Program.token = SignInUserAndGetToken(Program.scopes, Program.ClientId);
@@ -47,10 +73,25 @@ namespace User_Security_Actions
             {
                 tokenRequestContext = new TokenRequestContext(Program.scopes, null);
 
-                accessToken = await Program.token.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+                Program.accessToken = await Program.token.GetTokenAsync(tokenRequestContext, CancellationToken.None);
             }
-
-            return accessToken;
         }
+
+        public static async Task MaintainToken()
+        {
+            if (null == Program.authResult || Program.authResult.ExpiresOn > DateTimeOffset.Now)
+            {
+                var publicClientApp = PublicClientApplicationBuilder
+                    .Create(Program.ClientId)
+                    .WithTenantId(Program.TenantId)
+                    .WithRedirectUri("http://localhost") // Required for interactive flow
+                    .Build();
+
+                Program.authResult = await publicClientApp
+                    .AcquireTokenInteractive(Program.scopes)
+                    .ExecuteAsync();
+            }
+        }
+
     }
 }
