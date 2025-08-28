@@ -267,10 +267,10 @@ namespace User_Security_Actions
         {
             string output = "";
 
-            output +=Environment.NewLine;
+            output += Environment.NewLine;
 
             //display the number of methods
-            output +=$"\nNumber of AuthMehtods:  {list.Count}";
+            output += $"\nNumber of AuthMehtods:  {list.Count}";
 
             //loop through the list of MFA methods
             for (int i = 0; i < list.Count; i++)
@@ -291,6 +291,12 @@ namespace User_Security_Actions
                             //not an option as a default secondary method
 
                             output += $"\nType of Method   : Platform Credential";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDisplay Name     : {platformMethod.DisplayName}";
                             output += $"\nPlatform Type    : {platformMethod.Platform}";
                             output += $"\nKey Strength     : {platformMethod.KeyStrength}";
@@ -303,6 +309,12 @@ namespace User_Security_Actions
                             //not an option as a default secondary method
 
                             output += $"\nType of Method   : Windows Hello for Business";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDisplay Name     : {wfbMethod.DisplayName}";
                             output += $"\nPlatform Type    : {wfbMethod.Device}";
                             output += $"\nKey Strength     : {wfbMethod.KeyStrength}";
@@ -315,6 +327,12 @@ namespace User_Security_Actions
                             //not an option as a default secondary method
 
                             output += $"\nType of Method   : Temporary Access Pass";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nStart Date       : {tapMethod.StartDateTime}";
                             output += $"\nLifetime         : {tapMethod.LifetimeInMinutes}";
                             output += $"\nReusable         : {tapMethod.IsUsableOnce}";
@@ -330,6 +348,12 @@ namespace User_Security_Actions
 
                             var softOathMethod = (SoftwareOathAuthenticationMethod)list[i];
                             output += $"\nType of Method  : Software Oath Token";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDisplay Name    : {softOathMethod.SecretKey}";
                             break;
 
@@ -350,6 +374,12 @@ namespace User_Security_Actions
                                 output += "\n\n **Default Method** ";
                              
                             output += $"\nType of Method  : Phone Authentication";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+                            
                             output += $"\nPhone number    : {phoneMethod.PhoneNumber}";
                             output += $"\nPhone type      : {phoneMethod.PhoneType}";
                             output += $"\nSMS SignInState : {phoneMethod.SmsSignInState}";
@@ -362,6 +392,12 @@ namespace User_Security_Actions
                             //not an option for secondary authentication
 
                             output += $"\nType of Method  : Password";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDisplay Name    : {passwordAuthMethod.Password}";
                             break;
 
@@ -374,6 +410,12 @@ namespace User_Security_Actions
                                 output += "\n\n **Useable as Default Method** ";
 
                             output += $"\nType of Method  : Microsoft Authenticator";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDisplay Name    : {mSAuthenticatorMethod.DisplayName}";
                             output += $"\nDevice Tag      : {mSAuthenticatorMethod.DeviceTag}";
                             output += $"\nDevice          : {mSAuthenticatorMethod.Device}";
@@ -389,6 +431,12 @@ namespace User_Security_Actions
                             if ("Oath" == defaultMethod)
                                 output += "\n\n **Usable ass Default Method** ";
                             output += $"\nType of Method : Hardware Oath Token";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nDevice Name    : {hardOathAuthMethod.Device}";
                             break;
 
@@ -401,6 +449,12 @@ namespace User_Security_Actions
                             //    output += "\n\n **Default Method** ";
 
                             output +=$"\nType of Method  : Fido2 Passkey";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output +=$"\nDisplay Name    : {fido2Method.DisplayName}";
                             output +=$"\nAAGuid          : {fido2Method.AaGuid}";
                             output +=$"\nDevice          : {fido2Method.Model}";
@@ -412,27 +466,75 @@ namespace User_Security_Actions
                             
                             //not useable for secondary authentication
                             output += $"\nType of Method  : Alternate E-Mail";
+
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+
                             output += $"\nEmail address   : {emailAuthMethod.EmailAddress}";
                             break;
 
                         case QrCodePinAuthenticationMethod:
+                            //cast the array item into the actual object so that we have all the data available.
                             var qrCodePinAuthMethod = (QrCodePinAuthenticationMethod)list[i];
                             output += $"\nType of Method  : QR Code and PIN";
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
+                            if (null != qrCodePinAuthMethod.StandardQRCode)
+                            {
+                                output += $"\n Standard QR Code : ";
+                                output += $"\n  ID               : " + qrCodePinAuthMethod.StandardQRCode.Id;
+                                output += $"\n  Created DateTime : " + qrCodePinAuthMethod.StandardQRCode.CreatedDateTime.Value.ToLocalTime();
+                                output += $"\n  Start DateTime   : " + qrCodePinAuthMethod.StandardQRCode.StartDateTime.Value.ToLocalTime();
+                                output += $"\n  Expiry DateTime  : " + qrCodePinAuthMethod.StandardQRCode.ExpireDateTime.Value.ToLocalTime();
+                                output += $"\n  LasUsed DateTime : ";
+                                if (null != qrCodePinAuthMethod.StandardQRCode.LastUsedDateTime)
+                                    output += qrCodePinAuthMethod.StandardQRCode.LastUsedDateTime.Value.ToLocalTime();
+                                else
+                                    output += "NULL";
+                            }
+                            else
+                                output += $"\n Standard QR Code : NULL";
+
+                            if (null != qrCodePinAuthMethod.TemporaryQRCode)
+                            {
+                                output += $"\n Temporary QR Code : ";
+                                output += $"\n  ID               : " + qrCodePinAuthMethod.TemporaryQRCode.Id;
+                                output += $"\n  Created DateTime : " + qrCodePinAuthMethod.TemporaryQRCode.CreatedDateTime.Value.ToLocalTime();
+                                output += $"\n  Start DateTime   : " + qrCodePinAuthMethod.TemporaryQRCode.StartDateTime.Value.ToLocalTime();
+                                output += $"\n  Expiry DateTime  : " + qrCodePinAuthMethod.TemporaryQRCode.ExpireDateTime.Value.ToLocalTime();
+                                output += $"\n  LasUsed DateTime : ";
+                                if (null != qrCodePinAuthMethod.TemporaryQRCode.LastUsedDateTime)
+                                    output += qrCodePinAuthMethod.TemporaryQRCode.LastUsedDateTime.Value.ToLocalTime();
+                                else
+                                    output += "NULL";
+                            }
+                            else
+                                output += $"\n Temporary QR Code : NULL";
+
+                            if (null != qrCodePinAuthMethod.Pin)
+                            {
+                                output += "\n QR Code PIN : ";
+                                output += "\n  ID                : " + qrCodePinAuthMethod.Pin.Id;
+                                output += "\n  Created DateTime  : " + qrCodePinAuthMethod.Pin.CreatedDateTime.Value.ToLocalTime();
+                                output += "\n  Updated DateTime  : " + qrCodePinAuthMethod.Pin.UpdatedDateTime.Value.ToLocalTime();
+                                output += "\n  Req Force Change  : " + qrCodePinAuthMethod.Pin.ForceChangePinNextSignIn.ToString();
+                            }
                             break;
                         
                         //incase we get a new method type
                         default:
                             output +=$"\nType of Method : {list[i].OdataType}";
+                            if (null != list[i].Id)
+                                output += $"\nID              : {list[i].Id}";
+                            if (null != list[i].CreatedDateTime)
+                                output += $"\nCreatedDateTime : {list[i].CreatedDateTime.Value.ToLocalTime()}";
                             break;
                     }
                 }
-
-                //check if the rest of the properties are null before attempting to display
-                if (null != list[i].Id)
-                    output +=$"\nID              : {list[i].Id}";
-                if (null != list[i].CreatedDateTime)
-                    output +=$"\nCreatedDateTime : {list[i].CreatedDateTime}";
-
 
                 /******************************************* ommitting for now, leaving for reference and possible future use
                 if (null != item.AdditionalData)
@@ -582,7 +684,7 @@ namespace User_Security_Actions
             }
             catch (ODataError e)
             {
-                MessageBox.Show("Error! getting organization details: " + e);
+                MessageBox.Show("Error! getting organization details: " + e.Message);
             }
 
             return successful;
@@ -615,6 +717,16 @@ namespace User_Security_Actions
             }
             
             return isMember;
+        }
+
+        public static async Task<string> getMethodName(string Id)
+        {
+            string result = null;
+
+            var list = getUserMfaMethods();
+
+
+            return result;
         }
     }
 }

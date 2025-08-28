@@ -226,7 +226,7 @@ namespace User_Security_Actions
 
             string defaultMethod;
 
-            Form1.ActiveForm.Cursor = Cursors.WaitCursor;
+            //Form1.ActiveForm.Cursor = Cursors.WaitCursor;
 
             var methods = await MFAExtras.getUserMfaMethods();
             defaultMethod = await MFAExtras.getRegistrationAuthData(print);
@@ -234,7 +234,7 @@ namespace User_Security_Actions
             if (null != methods && print)
                 MFAExtras.printMFAData(methods, defaultMethod);
 
-            Form1.ActiveForm.Cursor = Cursors.Default;
+            //Form1.ActiveForm.Cursor = Cursors.Default;
 
             //return the list of methods
             return methods;
@@ -250,13 +250,13 @@ namespace User_Security_Actions
 
             var method = MFAList.Find(x => x.Id == id);
             //verify the input & act: remove the method or no action
-        
+
             //find the Id provided in the ID of authentication methods
-            if (method.Id == id)
+            if (null != method && method.Id == id)
             {
                 modifyRichTextBox($"\n \nRemoving method: {method.OdataType} with ID: {method.Id}\n");
 
-                
+
                 switch (method.OdataType)
                 {
                     //WHFB method
@@ -408,26 +408,93 @@ namespace User_Security_Actions
                             + "Please do so from the Entra portal");
                         break;
 
+                    case Program.qrCodeAuthMethod:
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                QrCodePinMethod.DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                        break;
+
                     default:
                         //we shouldn't get here, the list is all inclusive... not sure what to do here...
                         //throw an exception? error message?
                         break;
                 }
             }
+            else
+            {
+                //ID was not found within the list of returned MFA methods, lets check if its a QR Code method
+                method = MFAList.Find(n => n is QrCodePinAuthenticationMethod);
+
+                if (null != method)
+                {
+                    QrCodePinAuthenticationMethod qrCode = (QrCodePinAuthenticationMethod)method;
+                    //it was a QR Code method, lets check if its the StandardCode
+                    if (null != qrCode.StandardQRCode && qrCode.StandardQRCode.Id.Equals(id))
+                    {
+                        //it is, we can delete the StandardCode
+                        try
+                        {
+                            await Program.graphClient.Users[Program.user.Id].Authentication.
+                                QrCodePinMethod.StandardQRCode.DeleteAsync();
+                            successful = true;
+                        }
+                        catch (ODataError err)
+                        {
+                            MessageBox.Show(err.Message + "\nError removing method: try again");
+                            successful = false;
+                        }
+                    }
+                    else if (null != qrCode.TemporaryQRCode && qrCode.TemporaryQRCode.Id.Equals(id))
+                    {
+                        //it was a QR Code method, lets check if its the TemporaryCode
+                        if (null != qrCode.TemporaryQRCode && qrCode.TemporaryQRCode.Id.Equals(id))
+                        {
+                            //it is, we can delete the TemporaryCode
+                            try
+                            {
+                                await Program.graphClient.Users[Program.user.Id].Authentication.
+                                    QrCodePinMethod.TemporaryQRCode.DeleteAsync();
+                                successful = true;
+                            }
+                            catch (ODataError err)
+                            {
+                                MessageBox.Show(err.Message + "\nError removing method: try again");
+                                successful = false;
+                            }
+                        }
+                    }
+                    else if (null != qrCode.Pin && qrCode.Pin.Id.Equals(id))
+                    {
+                        MessageBox.Show("QR Code PINs cannot be deleted. You can reset it from the QR Code window.");
+                    }
+                }
+            }
 
             if (successful)
             {
-                // if we leave the loop, no match was found
-                MessageBox.Show("Method " + Program.input + " deleted.");
+                modifyRichTextBox("Method " + Program.input + " deleted.");
             }
 
             this.Cursor = Cursors.Default;
         }
+
         private async void getUserMFA_Click(object sender, EventArgs e)
         {
+            this.Cursor = Cursors.WaitCursor;
+
             bool print = true;
             modifyRichTextBox("\n\nGetting MFA methods for user: " + Program.user.DisplayName + "\n\n");
             await getAndPrintMFA(print);
+
+            this.Cursor = Cursors.Default;
 
         }
 
@@ -943,6 +1010,8 @@ namespace User_Security_Actions
 
             if (DialogResult.OK == inputResult)
             {
+                this.Cursor = Cursors.WaitCursor;
+
                 string input = Program.input;
                 Program.input = null;
 
@@ -964,6 +1033,8 @@ namespace User_Security_Actions
                     printUserStatus(Program.user);
                     MessageBox.Show("Method removed for: " + Program.user.DisplayName);
                 }
+
+                this.Cursor= Cursors.Default;
             }
         }
 
