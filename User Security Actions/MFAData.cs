@@ -719,12 +719,72 @@ namespace User_Security_Actions
             return isMember;
         }
 
-        public static string getMethodName(string Id)
+        public static async Task<string> getMethodName(string Id)
         {
             string result = null;
 
-            var list = getUserMfaMethods();
+            var list = await getUserMfaMethods();
 
+            foreach (var item in list)
+            {
+                switch (item)
+                {
+                    case PlatformCredentialAuthenticationMethod:
+                        result = "Platform Credential";
+                        break;
+
+                    case WindowsHelloForBusinessAuthenticationMethod:
+                        result = "Windows Hello for Business";
+                        break;
+
+                    case TemporaryAccessPassAuthenticationMethod:
+                        result = "Temporary Access Pass";
+                        break;
+
+                    case SoftwareOathAuthenticationMethod:
+                        result = "Sofware Oath";
+                        break;
+
+                    case PhoneAuthenticationMethod:
+                        var phoneMethod = item as PhoneAuthenticationMethod;
+                        if (AuthenticationPhoneType.Mobile == phoneMethod.PhoneType)
+                            result = "Mobile Phone";
+                        else if (AuthenticationPhoneType.AlternateMobile == phoneMethod.PhoneType)
+                            result = "Alternate Mobile Phone";
+                        else if (AuthenticationPhoneType.Office == phoneMethod.PhoneType)
+                            result = "Office Phone";
+                        break;
+
+                    case PasswordAuthenticationMethod:
+                        result = "Password";
+                        break;
+
+                    case MicrosoftAuthenticatorAuthenticationMethod:
+                        result = "Microsoft Authenticator";
+                        break;
+
+                    case HardwareOathAuthenticationMethod:
+                        result = "Hardware Oath";
+                        break;
+
+                    case Fido2AuthenticationMethod:
+                        result = "Fido2";
+                        break;
+
+                    case EmailAuthenticationMethod:
+                        result = "E-mail";
+                        break;
+
+                    case QrCodePinAuthenticationMethod:
+                        result = "QR Code/Pin";
+                        break;
+
+                    //incase we get a new method type
+                    default:
+                        result = item.OdataType;
+                        break;
+                }
+            }
             return result;
         }
     }

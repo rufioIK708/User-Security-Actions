@@ -5,8 +5,6 @@ using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
 //using Microsoft.Graph.Beta.Models.Networkaccess;
 using Microsoft.Graph.Beta.Models.ODataErrors;
-using Microsoft.Graph.Beta.Reports.ServiceActivity.GetActiveUserMetricsForDesktopMailByReadEmailWithInclusiveIntervalStartDateTimeWithExclusiveIntervalEndDateTimeWithAggregationIntervalInMinutes;
-using Microsoft.Graph.Beta.Users.Item.Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,7 +24,6 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using User_Security_Actions;
 using static System.Net.Mime.MediaTypeNames;
-
 
 
 namespace User_Security_Actions
@@ -245,6 +242,7 @@ namespace User_Security_Actions
         {
             bool successful = false;
             bool print = false;
+            string methodName = "";
 
             var MFAList = await getAndPrintMFA(print);
 
@@ -1003,6 +1001,7 @@ namespace User_Security_Actions
             string labelMessage = "Please enter the ID of the method to remove.";
             labelMessage += "\nGet the methods first so you can see the IDs.";
             string title = "Remove Authentication Method";
+            string result = "";
 
             bool successful = false;
 
@@ -1031,9 +1030,12 @@ namespace User_Security_Actions
                     //get the updated user
                     Program.user = await getUser(Program.user.UserPrincipalName);
                     printUserStatus(Program.user);
-                    MessageBox.Show("Method removed for: " + Program.user.DisplayName);
+                    result = "Successfully removed " + " for " + Program.user.DisplayName;
                 }
+                else
+                    result = "Unable to remove " + " method.";
 
+                modifyRichTextBox(result);
                 this.Cursor= Cursors.Default;
             }
         }
