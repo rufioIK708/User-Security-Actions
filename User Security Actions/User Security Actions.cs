@@ -26,6 +26,7 @@ using User_Security_Actions;
 using static System.Net.Mime.MediaTypeNames;
 
 
+
 namespace User_Security_Actions
 {
 
@@ -238,11 +239,11 @@ namespace User_Security_Actions
         }
 
         //method to delete an MFA method
-        public async Task deleteMethod(string id)
+        public async Task<bool> deleteMethod(string id)
         {
             bool successful = false;
             bool print = false;
-            string methodName = "";
+            string methodName = await MFAExtras.getMethodName(id);
 
             var MFAList = await getAndPrintMFA(print);
 
@@ -472,16 +473,19 @@ namespace User_Security_Actions
                     else if (null != qrCode.Pin && qrCode.Pin.Id.Equals(id))
                     {
                         MessageBox.Show("QR Code PINs cannot be deleted. You can reset it from the QR Code window.");
+                        successful = false;
                     }
                 }
             }
 
             if (successful)
             {
-                modifyRichTextBox("Method " + Program.input + " deleted.");
+                modifyRichTextBox("Method " + methodName + " deleted.");
             }
 
             this.Cursor = Cursors.Default;
+
+            return successful;
         }
 
         private async void getUserMFA_Click(object sender, EventArgs e)
@@ -1001,12 +1005,12 @@ namespace User_Security_Actions
             string labelMessage = "Please enter the ID of the method to remove.";
             labelMessage += "\nGet the methods first so you can see the IDs.";
             string title = "Remove Authentication Method";
-            string result = "";
 
             bool successful = false;
 
             DialogResult inputResult = new textInput(labelMessage, title, false).ShowDialog();
 
+            
             if (DialogResult.OK == inputResult)
             {
                 this.Cursor = Cursors.WaitCursor;
@@ -1014,10 +1018,11 @@ namespace User_Security_Actions
                 string input = Program.input;
                 Program.input = null;
 
+                string result = await MFAExtras.getMethodName(input);
+
                 try
                 {
-                    await deleteMethod(input);
-                    successful = true;
+                    successful = await deleteMethod(input);
                 }
                 catch (Exception err)
                 {
@@ -1030,10 +1035,10 @@ namespace User_Security_Actions
                     //get the updated user
                     Program.user = await getUser(Program.user.UserPrincipalName);
                     printUserStatus(Program.user);
-                    result = "Successfully removed " + " for " + Program.user.DisplayName;
+                    result = "Successfully removed " + result + " for " + Program.user.DisplayName;
                 }
                 else
-                    result = "Unable to remove " + " method.";
+                    result = "Unable to remove " + result + " method.";
 
                 modifyRichTextBox(result);
                 this.Cursor= Cursors.Default;
@@ -1043,21 +1048,20 @@ namespace User_Security_Actions
         private async void buttonRegisterFido2Passkey_Click(object sender, EventArgs e)
         {
             WebauthnCredentialCreationOptions response = new();
+            int timeout = 5;
 
             try
             {
-                response = await Program.graphClient.Users[Program.user.Id].
-                    Authentication.Fido2Methods.CreationOptionsWithChallengeTimeoutInMinutes.
-                    GetAsync(static (requestConfiguration) =>
-                    {
-                        requestConfiguration.QueryParameters.ChallengeTimeoutInMinutes = 5;
-                    });
+                response = await GraphCalls.getFido2CreationOptions(timeout);
+                modifyRichTextBox("\nCreationOptions for Fido2 gathered successfully\n");
             }
             catch (Exception err)
             {
-                MessageBox.Show("Error registering Fido2 Passkey. Please try again."
-                    + "\n" + err.InnerException);
+                MessageBox.Show("Error getting Fido2 Passkey creation options. Please try again."
+                    + "\n" + err.Message);
             }
+
+            
         }
 
         private void buttonSignOut_Click(object sender, EventArgs e)

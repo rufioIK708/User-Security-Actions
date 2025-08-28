@@ -1,6 +1,5 @@
 ﻿using Azure;
 using Microsoft.Graph.Beta.Models;
-using Microsoft.Graph.Beta.Models.ManagedTenants;
 using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,6 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace User_Security_Actions
 {
@@ -24,7 +22,7 @@ namespace User_Security_Actions
         const string QR_CODE_TEMPORARY_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/temporaryQrCode";
         const string QR_CODE_PIN_ADDRESS_TEMPLATE = "/users/{0}/authentication/qrCodePinMethod/pin";
         const string TAP_METHOD_ADDRESS_TEMPLATE = "/users/{0}/authentication/temporaryAccessPassMethods";
-
+        const string GRAPH_FIDO2_CREATEOPTS_TEMPLATE = "/users/{0}/authentication/fido2methods/creationOptions(challengeTimeoutInMinutes={1}";
 
         public enum ErrorCorrectionLevel
         {
@@ -458,6 +456,47 @@ namespace User_Security_Actions
                 // Return the deserialized object.
                 return newTapMethod;
             }
+        }
+
+        public static async Task<WebauthnCredentialCreationOptions> getFido2CreationOptions(int timeout)
+        {
+            WebauthnCredentialCreationOptions options = null;
+
+            string endpoint = String.Format(GRAPH_FIDO2_CREATEOPTS_TEMPLATE, Program.user.Id, timeout);
+
+            //update the token
+            await UserAuthentication.GetAccessToken();
+
+            using (var httpClient = new HttpClient())
+            {
+                string accessToken = Program.accessToken.Value.Token.ToString();
+                httpClient.BaseAddress = new Uri(baseAddress);
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+                // Call the endpoint for the current user
+                var response = await httpClient.GetAsync(baseAddress + endpoint);
+
+                //check the response and throw an exception if we are not successful
+                if (!response.IsSuccessStatusCode)
+                {
+                    // You may want to handle errors more gracefully
+                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                }
+
+                //deserialize the JSON into objects.
+                try
+                {
+                    options = DeserializeObject<WebauthnCredentialCreationOptions>
+                        (await response.Content.ReadAsStringAsync());
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+
+            return options;
         }
     }
 }
