@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph.Beta;
@@ -511,11 +512,24 @@ namespace User_Security_Actions
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Debug);
             });
-            //initialize the token
-            Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
-            //UserAuthentication.SignInAndCreateClients(Program.scopes, Program.ClientId);
-            
-            
+
+            try
+            {
+                //initialize the token
+                //Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
+                //await UserAuthentication.SignInAndCreateClients(Program.scopes, Program.ClientId);
+                Program.token = UserAuthentication.GetCredential(Program.scopes, Program.ClientId);
+                var tokenRequestContext = new TokenRequestContext(Program.scopes);
+                string accessToken = Program.token.GetToken(tokenRequestContext).Token;
+                Program.httpClient = UserAuthentication.GetHttpClient(accessToken);
+                Program.graphClient = UserAuthentication.GetGraphClient(Program.httpClient);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+
 
             //verify the user is signed in
             try
@@ -1060,8 +1074,6 @@ namespace User_Security_Actions
                 MessageBox.Show("Error getting Fido2 Passkey creation options. Please try again."
                     + "\n" + err.Message);
             }
-
-            
         }
 
         private void buttonSignOut_Click(object sender, EventArgs e)

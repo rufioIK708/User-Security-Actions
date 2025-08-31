@@ -7,6 +7,7 @@ using Microsoft.Graph.Beta.Models.ODataErrors;
 using Microsoft.Identity.Client;
 using System;
 using System.IdentityModel;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -18,12 +19,13 @@ namespace User_Security_Actions
 {
     internal class UserAuthentication
     {
+        
         public UserAuthentication()
         {
 
         }
 
-        public static async void SignInAndCreateClients(string[] scopes, string ClientId)
+        /*public static async Task SignInAndCreateClients(string[] scopes, string ClientId)
         {
             var publicClientApp = PublicClientApplicationBuilder
             .Create(ClientId)
@@ -31,20 +33,67 @@ namespace User_Security_Actions
             .WithRedirectUri("http://localhost") // Required for interactive flow
             .Build();
 
-            var authResult = await publicClientApp
+            AuthenticationResult authResult = null;
+
+            try
+            {
+                 authResult = await publicClientApp
                 .AcquireTokenInteractive(scopes)
                 .ExecuteAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            
+            if (null != authResult)
+            {
+                var httpClient = new HttpClient(new HttpClientHandler
+                {
+                    AllowAutoRedirect = true,
+                    UseCookies = true,
+                    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
+                    MaxConnectionsPerServer = int.MaxValue,
+                    UseProxy = true,
+                    Proxy = null,
+                });
 
-            var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
 
 
-            var garaphClient = new GraphServiceClient(httpClient);
+                var garaphClient = new GraphServiceClient(httpClient);
 
-            Program.graphClient = garaphClient;
-            Program.httpClient = httpClient;
-            Program.authResult = authResult;
+                Program.graphClient = garaphClient;
+                Program.httpClient = httpClient;
+                Program.authResult = authResult;
+            }
+            
+        }*/
+
+        public static InteractiveBrowserCredential GetCredential(string[] scopes, string ClientId)
+        {
+            var opts = new InteractiveBrowserCredentialOptions()
+            {
+                ClientId = ClientId
+            };
+            InteractiveBrowserCredential cred = new InteractiveBrowserCredential(opts);
+
+            return cred;
+
         }
+
+        public static HttpClient GetHttpClient (string accessToken)
+        {
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            return new HttpClient();
+        }
+
+        public static GraphServiceClient GetGraphClient (HttpClient client)
+        {
+            return new GraphServiceClient(client);
+        }
+
         public static InteractiveBrowserCredential SignInUserAndGetToken (string[] scopes, string ClientId)
         {
 
@@ -74,22 +123,6 @@ namespace User_Security_Actions
                 tokenRequestContext = new TokenRequestContext(Program.scopes, null);
 
                 Program.accessToken = await Program.token.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-            }
-        }
-
-        public static async Task MaintainToken()
-        {
-            if (null == Program.authResult || Program.authResult.ExpiresOn > DateTimeOffset.Now)
-            {
-                var publicClientApp = PublicClientApplicationBuilder
-                    .Create(Program.ClientId)
-                    .WithTenantId(Program.TenantId)
-                    .WithRedirectUri("http://localhost") // Required for interactive flow
-                    .Build();
-
-                Program.authResult = await publicClientApp
-                    .AcquireTokenInteractive(Program.scopes)
-                    .ExecuteAsync();
             }
         }
 
