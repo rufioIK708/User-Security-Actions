@@ -12,7 +12,6 @@
     <Reference Update="System">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web" />
     <PackageReference Include="Azure.Core" Version="1.47.2" />
     <PackageReference Include="Azure.Identity" Version="1.15.0" />
     <PackageReference Include="ExCSS" Version="4.2.3" />

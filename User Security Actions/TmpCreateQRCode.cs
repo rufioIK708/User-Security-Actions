@@ -68,7 +68,7 @@ namespace User_Security_Actions
             try
             {
                 //create the new code
-                GraphCalls.QrCode returnedMethod = await GraphCalls.CreateTemporaryQrCode(newCode);
+                GraphCalls.QrCode returnedMethod = await GraphCalls.CreateTemporaryQrCode(newCode, Program.httpClient, Program.user.Id);
                 //clear and redraw the pane
                 Control parent = this.Parent;
                 parent.Controls.Clear();

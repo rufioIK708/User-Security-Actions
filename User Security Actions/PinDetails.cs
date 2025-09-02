@@ -50,7 +50,7 @@ namespace User_Security_Actions
             
             try
             {
-                GraphCalls.QrPin returnedPin = await GraphCalls.ResetQrCodePin();
+                GraphCalls.QrPin returnedPin = await GraphCalls.ResetQrCodePin(Program.httpClient, Program.user.Id);
 
                 Control parent = this.Parent;
                 parent.Controls.Clear();

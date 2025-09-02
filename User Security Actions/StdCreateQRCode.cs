@@ -151,7 +151,7 @@ namespace User_Security_Actions
                     try
                     {
                         GraphCalls.QrCodePinAuthenticationMethod returnedMethod =
-                            await GraphCalls.CreateQrCodeMethod(newMethod);
+                            await GraphCalls.CreateQrCodeMethod(newMethod, Program.httpClient, Program.user.Id);
 
                         this.ParentForm.Dispose();
 
@@ -167,7 +167,7 @@ namespace User_Security_Actions
                     //pin box is not visible, so we just create a new qrcode
                     try
                     {
-                        GraphCalls.QrCode returnedMethod = await GraphCalls.CreateStandardQrCode(newCode);
+                        GraphCalls.QrCode returnedMethod = await GraphCalls.CreateStandardQrCode(newCode, Program.httpClient, Program.user.Id);
 
                         Control parent = this.Parent;
                         parent.Controls.Clear();
