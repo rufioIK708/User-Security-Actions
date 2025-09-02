@@ -115,7 +115,7 @@ namespace User_Security_Actions
                 try
                 {
                     
-                    await GraphCalls.DeleteStandardQrCode();
+                    await GraphCalls.DeleteStandardQrCode(Program.httpClient, Program.user.Id);
                     Control parent = this.Parent; 
                     parent.Controls.Clear();
                     StdCreateQRCode pane = new StdCreateQRCode(true);
@@ -133,7 +133,7 @@ namespace User_Security_Actions
                 try
                 {
                     
-                    await GraphCalls.DeleteTemporaryQrCode();
+                    await GraphCalls.DeleteTemporaryQrCode(Program.httpClient, Program.user.Id);
                     Control parent = this.Parent;
                     parent.Controls.Clear();
                     TmpCreateQRCode pane = new TmpCreateQRCode();

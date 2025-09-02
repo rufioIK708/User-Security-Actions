@@ -2,6 +2,7 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
 //using Microsoft.Graph.Beta.Models.Networkaccess;
@@ -497,7 +498,7 @@ namespace User_Security_Actions
             modifyRichTextBox("\n\nGetting MFA methods for user: " + Program.user.DisplayName + "\n\n");
             await getAndPrintMFA(print);
 
-            this.Cursor = Cursors.WaitCursor;
+            this.Cursor = Cursors.Default;
 
         }
 
@@ -506,22 +507,34 @@ namespace User_Security_Actions
             //variable to check if the sign-in was successful
             bool successful = false;
 
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                //builder.AddDebug();
+            var services = new ServiceCollection();
+
+            //add logging
+            services.AddLogging(builder =>
+            { 
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Debug);
             });
 
+            // Add HttpClient with logging
+            services.AddHttpClient("LoggedClient").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler());
+
+            // Build the service provider
+            var serviceProvider = services.BuildServiceProvider();
+
             try
             {
+                // Get the logger and HttpClient
+                var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+
                 //initialize the token
                 //Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
                 //await UserAuthentication.SignInAndCreateClients(Program.scopes, Program.ClientId);
                 Program.token = UserAuthentication.GetCredential(Program.scopes, Program.ClientId);
                 var tokenRequestContext = new TokenRequestContext(Program.scopes);
-                string accessToken = Program.token.GetToken(tokenRequestContext).Token;
-                Program.httpClient = UserAuthentication.GetHttpClient(accessToken);
+                string accessToken = Program.token.GetToken(tokenRequestContext).Token.ToString();
+                Program.httpClient = UserAuthentication.GetHttpClient(accessToken, httpClientFactory);
                 Program.graphClient = UserAuthentication.GetGraphClient(Program.httpClient);
             }
             catch (Exception ex)
@@ -973,7 +986,7 @@ namespace User_Security_Actions
                             {
                                 await deleteMethod(response[i].Id);
                             }
-                            catch (ODataError err)
+                            catch (ODataError)
                             {
                                 //do nothing as exceptions are expected.
                                 //MessageBox.Show(err.Error + $"\nError removing method: {err.Message}\n {err.Data}");
@@ -1066,7 +1079,7 @@ namespace User_Security_Actions
 
             try
             {
-                response = await GraphCalls.getFido2CreationOptions(timeout);
+                response = await GraphCalls.getFido2CreationOptions(timeout, Program.httpClient, Program.user.Id);
                 modifyRichTextBox("\nCreationOptions for Fido2 gathered successfully\n");
             }
             catch (Exception err)
@@ -1116,7 +1129,7 @@ namespace User_Security_Actions
             GraphCalls.QrCodePinAuthenticationMethod output = null;
             try
             {
-                output = await GraphCalls.GetQrCodeMethodOne();
+                output = await GraphCalls.GetQrCodeMethodOne(Program.httpClient, Program.user.Id);
             }
             catch (Exception err)
             {
@@ -1154,8 +1167,7 @@ namespace User_Security_Actions
 
         private async void buttonAddTapMethod_Click(object sender, EventArgs e)
         {
-            
-
+            this.Cursor = Cursors.WaitCursor;
 
             //1. Get and parse the TAP method policy
             string groupTAPResult;
@@ -1163,11 +1175,8 @@ namespace User_Security_Actions
 
             try
             {
-                //get the TAP method policy
-                // unable to get the values for defaultlifetimeinminutes, defaultlength,
-                // maximumlifetimeinminutes, etc have to cast the response into
-                // TemporaryAccessPassAuthenticationMethodConfiguration
-
+                //cannot get the policy as a TemporaryAccessPassAuthencationMethodConfiguration object, need to cast into
+                // from AuthencationMethodsPolicy object that is returned.
                 tapPolicy = (TemporaryAccessPassAuthenticationMethodConfiguration)await 
                     Program.graphClient.Policies.AuthenticationMethodsPolicy.
                     AuthenticationMethodConfigurations["TemporaryAccessPass"].GetAsync();
@@ -1184,9 +1193,7 @@ namespace User_Security_Actions
             if (AuthenticationMethodState.Disabled == tapPolicy.State)
             {
                 MessageBox.Show("The TAP method is not enabled in this tenant,\n"
-                    + "or for this user.\n"
-                    + "Please contact your administrator.");
-
+                    + "Check Entra ID > Authentication Methods > Policies.");
             }
             //if the user is excluded from the TAP method, we stop here
             else if ("None" != groupTAPResult)
@@ -1220,9 +1227,12 @@ namespace User_Security_Actions
                 int? minimumLifetimeInMinutes = tapPolicy.MinimumLifetimeInMinutes;
                 bool? isUsableOnce = tapPolicy.IsUsableOnce;
 
+
                 new TAPForm(minimumLifetimeInMinutes, maximumLifetimeInMinutes,
                     defaultLifetimeInMinutes, isUsableOnce).ShowDialog();
             }
+
+            this.Cursor = Cursors.Default;
 
         }
 
@@ -1314,9 +1324,10 @@ namespace User_Security_Actions
                 try
                 {
                     Program.qrPolicy = qrPolicy;
-                    GraphCalls.QrCodePinAuthenticationMethod qrCode = await GraphCalls.GetQrCodeMethodOne();
-                    //made it past the checks, show the window
+                    GraphCalls.QrCodePinAuthenticationMethod qrCode = 
+                        await GraphCalls.GetQrCodeMethodOne(Program.httpClient, Program.user.Id);
                     
+                    //made it past the checks, show the window
                     new qrCodeWindow(qrCode).ShowDialog();
                 }
                 catch (Exception ex)

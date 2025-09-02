@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace User_Security_Actions
 {
+    //Custom class to make direct HTTP calls to MS Graph
+    // this is for missing or functionality that is not working as expected.
     public class GraphCalls
     {
 #nullable enable
@@ -72,316 +74,232 @@ namespace User_Security_Actions
         }
 #nullable disable
 
-        public static async Task<QrCodePinAuthenticationMethod> GetQrCodeMethodOne()
+        public static async Task<QrCodePinAuthenticationMethod> GetQrCodeMethodOne(HttpClient httpClient, string userId)
         {
             QrCodePinAuthenticationMethod qrCodeMethod = null;
-            string userId = Program.user.Id;
+            
             string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            // Call the endpoint for the current user
+            var response = await httpClient.GetAsync(baseAddress + endpoint);
 
-
-            using (var httpClient = new HttpClient())
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode && System.Net.HttpStatusCode.NotFound != response.StatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                // Call the endpoint for the current user
-                var response = await httpClient.GetAsync(baseAddress + endpoint);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode && System.Net.HttpStatusCode.NotFound != response.StatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
-
-                //deserialize the JSON into objects.
-                try
-                {
-                    var options = new JsonSerializerOptions
-                    {
-                        AllowOutOfOrderMetadataProperties = true,
-                        PropertyNameCaseInsensitive = true
-                    };
-
-                    qrCodeMethod = JsonSerializer.Deserialize<QrCodePinAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync(), options);
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
-
-                // Return the deserialized object.
-                return qrCodeMethod;
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
             }
+
+            //deserialize the JSON into objects.
+            try
+            {
+                qrCodeMethod = DeserializeObject<QrCodePinAuthenticationMethod>
+                            (await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+
+            // Return the deserialized object.
+            return qrCodeMethod;
+            
         }
 
-        public static async Task DeleteStandardQrCode()
+        public static async Task DeleteStandardQrCode(HttpClient httpClient, string userId)
         {
-            string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            // Call the endpoint for the current user
+            var response = await httpClient.DeleteAsync(baseAddress + endpoint);
 
-
-            using (var httpClient = new HttpClient())
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                // Call the endpoint for the current user
-                var response = await httpClient.DeleteAsync(baseAddress + endpoint);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
             }
+            
         }
 
-        public static async Task DeleteTemporaryQrCode()
+        public static async Task DeleteTemporaryQrCode(HttpClient httpClient, string userId)
         {
-            string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            // Call the endpoint for the current user
+            var response = await httpClient.DeleteAsync(baseAddress + endpoint);
 
-
-            using (var httpClient = new HttpClient())
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                // Call the endpoint for the current user
-                var response = await httpClient.DeleteAsync(baseAddress + endpoint);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
             }
         }
 
-        public static async Task<QrPin> ResetQrCodePin()
+        public static async Task<QrPin> ResetQrCodePin(HttpClient httpClient, string userId)
         {
+            //object to return
             QrPin returnedPin = null;
-            string userId = Program.user.Id;
+            
+            //configure the endpoint
             string endpoint = string.Format(QR_CODE_PIN_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            //configure the payload
+            String patchPin = $"{{\r\n  \"@odata.type\": \"#microsoft.graph.qrPin\",\r\n  \"code\": \"\",\r\n}}";
 
-
-            using (var httpClient = new HttpClient())
+            //create the request
+            var content = new StringContent(patchPin, Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                Content = content
+            };
 
-                String patchPin = $"{{\r\n  \"@odata.type\": \"#microsoft.graph.qrPin\",\r\n  \"code\": \"\",\r\n}}";
+            // Call the endpoint for the current user
+            var response = await httpClient.SendAsync(request);
 
-                var content = new StringContent(patchPin, Encoding.UTF8, "application/json");
-                var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
+            {
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            }
+            else
+            {
+                try
                 {
-                    Content = content
-                };
+                    var deserialize = DeserializeObject<QrPin>
+                        (await response.Content.ReadAsStringAsync());
 
-                // Call the endpoint for the current user
-                var response = await httpClient.SendAsync(request);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    returnedPin = deserialize;
                 }
-                else
-                {
-                    try
-                    {
-                        var deserialize = DeserializeObject<QrPin>
-                            (await response.Content.ReadAsStringAsync());
-
-                        returnedPin = deserialize;
-                    }
-                    catch (Exception ex) { throw ex; }
-                }
+                catch (Exception) { throw; }
             }
 
             return returnedPin;
         }
 
-        public static async Task<QrCode> CreateStandardQrCode(QrCode newQrCode)
+        public static async Task<QrCode> CreateStandardQrCode(QrCode newQrCode, HttpClient httpClient, string userId)
         {
-            //QrCodePinAuthenticationMethod newCodeMethod = null;
+            //object to return
             QrCode returnedCode = null;
 
-            //bool successful = false;
-            string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_STANDARD_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            //configure payload
+            String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
 
-
-            using (var httpClient = new HttpClient())
+            //configure request
+            var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                Content = content
+            };
 
-                String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
+            // Call the endpoint for the current user
+            var response = await httpClient.SendAsync(request);
 
-                var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
-                var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
-                {
-                    Content = content
-                };
-
-                // Call the endpoint for the current user
-                var response = await httpClient.SendAsync(request);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
-                else
-                {
-                    try
-                    {
-                        var deserialize = DeserializeObject<QrCode>
-                            (await response.Content.ReadAsStringAsync());
-
-                        returnedCode = deserialize;
-                    }
-                    catch (Exception ex) { throw ex; }
-                }
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
+            {
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
             }
+            else
+            {
+                try
+                {
+                    var deserialize = DeserializeObject<QrCode>
+                        (await response.Content.ReadAsStringAsync());
+
+                    returnedCode = deserialize;
+                }
+                catch (Exception) { throw; }
+            }
+            
 
             return returnedCode;
 
         }
 
-        public static async Task<QrCode> CreateTemporaryQrCode(QrCode newQrCode)
+        public static async Task<QrCode> CreateTemporaryQrCode(QrCode newQrCode, HttpClient httpClient, string userId)
         {
+            //create the object to return
             QrCode newCode = null;
 
-            //bool successful = false;
-            string userId = Program.user.Id;
             string endpoint = string.Format(QR_CODE_TEMPORARY_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            //create the payload
+            String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
 
-
-            using (var httpClient = new HttpClient())
+            //create the request
+            var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                Content = content
+            };
 
-                String patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCode\", \"expireDateTime\": \"{newQrCode.ExpireDateTime.Value.ToUniversalTime()}\", \"startDateTime\": \"{newQrCode.StartDateTime.Value.ToUniversalTime()}\",}}";
+            // Call the endpoint for the current user
+            var response = await httpClient.SendAsync(request);
 
-                var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
-                var request = new HttpRequestMessage(new HttpMethod("PATCH"), baseAddress + endpoint)
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
+            {
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            }
+            else
+            {
+                try
                 {
-                    Content = content
-                };
+                    var deserialize = DeserializeObject<QrCode>
+                        (await response.Content.ReadAsStringAsync());
 
-                // Call the endpoint for the current user
-                var response = await httpClient.SendAsync(request);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    newCode = deserialize;
                 }
-                else
-                {
-                    try
-                    {
-                        var deserialize = DeserializeObject<QrCode>
-                            (await response.Content.ReadAsStringAsync());
+                catch (Exception) { throw; }
 
-                        newCode = deserialize;
-                    }
-                    catch (Exception ex) { throw ex; }
-
-                }
             }
 
             return newCode;
         }
 
         public static async Task<QrCodePinAuthenticationMethod>
-            CreateQrCodeMethod(QrCodePinAuthenticationMethod newQrCode)
+            CreateQrCodeMethod(QrCodePinAuthenticationMethod newQrCode, HttpClient httpClient, string userId)
         {
             QrCodePinAuthenticationMethod newCodeMethod = null;
 
-            //bool successful = false;
-            string userId = Program.user.Id;
+            //configure the endpoint
             string endpoint = string.Format(QR_CODE_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            //configure the payload
+            string patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCodePinAuthenticationMethod\",  \"standardQRCode\": {{\"expireDateTime\": \"{newQrCode.StandardQRCode.ExpireDateTime.Value.ToUniversalTime()}\",\"startDateTime\": \"{newQrCode.StandardQRCode.StartDateTime.Value.ToUniversalTime()}\"}}, \"pin\": {{\"code\": \"{newQrCode.Pin.Code}\"}}}}";
+            //configure the request
+            var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
 
+            // Call the endpoint for the current user
+            var response = await httpClient.PutAsync(baseAddress + endpoint, content);
 
-            using (var httpClient = new HttpClient())
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                string patchCode = $"{{\"@odata.type\": \"#microsoft.graph.qrCodePinAuthenticationMethod\",  \"standardQRCode\": {{\"expireDateTime\": \"{newQrCode.StandardQRCode.ExpireDateTime.Value.ToUniversalTime()}\",\"startDateTime\": \"{newQrCode.StandardQRCode.StartDateTime.Value.ToUniversalTime()}\"}}, \"pin\": {{\"code\": \"{newQrCode.Pin.Code}\"}}}}";
-
-                var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
-
-                // Call the endpoint for the current user
-                var response = await httpClient.PutAsync(baseAddress + endpoint, content);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            }
+            else
+            {
+                try
                 {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    string jsonString = await response.Content.ReadAsStringAsync();
+
+                    var deserialize = DeserializeObject<QrCodePinAuthenticationMethod>
+                        (jsonString);
+
+                    newCodeMethod = deserialize;
                 }
-                else
-                {
-                    try
-                    {
-                        string jsonString = await response.Content.ReadAsStringAsync();
+                catch (Exception) { throw; }
 
-                        var deserialize = DeserializeObject<QrCodePinAuthenticationMethod>
-                            (jsonString);
-
-                        newCodeMethod = deserialize;
-                    }
-                    catch (Exception ex) { throw ex; }
-
-                }
             }
 
             return newCodeMethod;
@@ -400,65 +318,57 @@ namespace User_Security_Actions
                 var deserialize = JsonSerializer.Deserialize<T>(json, options);
                 return deserialize;
             }
-            catch (Exception e) { throw e; }
+            catch (Exception) { throw; }
         }
 
-        public static async Task<TemporaryAccessPassAuthenticationMethod> CreateTapMethod(TemporaryAccessPassAuthenticationMethod tapMethod)
+        public static async Task<TemporaryAccessPassAuthenticationMethod> CreateTapMethod
+            (TemporaryAccessPassAuthenticationMethod tapMethod, HttpClient httpClient, string userId)
         {
             TemporaryAccessPassAuthenticationMethod newTapMethod = null;
-            string userId = Program.user.Id;
+            
+            //configure the endpoint
             string endpoint = string.Format(TAP_METHOD_ADDRESS_TEMPLATE, userId);
 
-            //update the token
-            await UserAuthentication.GetAccessToken();
+            ////configure the needed variables
+            string startDateTime = tapMethod.StartDateTime.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+            string usable = tapMethod.IsUsableOnce.ToString().ToLower();
+            int lifetime = (int)tapMethod.LifetimeInMinutes;
 
+            //configrue the payload
+            string patchCode = $"{{ \"startDateTime\": \"{startDateTime}\"," +
+                $"\"lifetimeInMinutes\": {lifetime}," +
+                $"\"isUsableOnce\": {usable} }}";
 
-            using (var httpClient = new HttpClient())
+            var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
+
+            // Call the endpoint for the current user
+            var response = await httpClient.PostAsync(baseAddress + endpoint, content);
+
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-
-                ////testing code starts here
-                string startDateTime = tapMethod.StartDateTime.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-                string usable = tapMethod.IsUsableOnce.ToString().ToLower();
-                int lifetime = (int)tapMethod.LifetimeInMinutes;
-
-                string patchCode = $"{{ \"startDateTime\": \"{startDateTime}\"," +
-                    $"\"lifetimeInMinutes\": {lifetime}," +
-                    $"\"isUsableOnce\": {usable} }}";
-
-                var content = new StringContent(patchCode, Encoding.UTF8, "application/json");
-
-                // Call the endpoint for the current user
-                var response = await httpClient.PostAsync(baseAddress + endpoint, content);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
-
-                //deserialize the JSON into objects.
-                try
-                {
-                    newTapMethod = DeserializeObject<TemporaryAccessPassAuthenticationMethod>
-                        (await response.Content.ReadAsStringAsync());
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-
-
-                // Return the deserialized object.
-                return newTapMethod;
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
             }
-        }
 
-        public static async Task<WebauthnCredentialCreationOptions> getFido2CreationOptions(int timeout)
+            //deserialize the JSON into objects.
+            try
+            {
+                newTapMethod = DeserializeObject<TemporaryAccessPassAuthenticationMethod>
+                    (await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+
+            // Return the deserialized object.
+            return newTapMethod;
+        }
+        
+
+        public static async Task<WebauthnCredentialCreationOptions> getFido2CreationOptions(int timeout, HttpClient httpClient, string userId)
         {
             WebauthnCredentialCreationOptions options = null;
 
@@ -467,33 +377,25 @@ namespace User_Security_Actions
             //update the token
             await UserAuthentication.GetAccessToken();
 
-            using (var httpClient = new HttpClient())
+             // Call the endpoint for the current user
+             var response = await httpClient.GetAsync(baseAddress + endpoint);
+
+            //check the response and throw an exception if we are not successful
+            if (!response.IsSuccessStatusCode)
             {
-                string accessToken = Program.accessToken.Value.Token.ToString();
-                httpClient.BaseAddress = new Uri(baseAddress);
-                httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                // You may want to handle errors more gracefully
+                throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            }
 
-                // Call the endpoint for the current user
-                var response = await httpClient.GetAsync(baseAddress + endpoint);
-
-                //check the response and throw an exception if we are not successful
-                if (!response.IsSuccessStatusCode)
-                {
-                    // You may want to handle errors more gracefully
-                    throw new Exception($"Graph API call failed: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
-                }
-
-                //deserialize the JSON into objects.
-                try
-                {
-                    options = DeserializeObject<WebauthnCredentialCreationOptions>
-                        (await response.Content.ReadAsStringAsync());
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
+            //deserialize the JSON into objects.
+            try
+            {
+                options = DeserializeObject<WebauthnCredentialCreationOptions>
+                    (await response.Content.ReadAsStringAsync());
+            }
+            catch (Exception)
+            {
+                throw;
             }
 
             return options;

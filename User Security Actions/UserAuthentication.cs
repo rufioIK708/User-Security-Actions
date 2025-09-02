@@ -12,7 +12,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks;
+
 using System.Windows.Forms;
 
 namespace User_Security_Actions
@@ -25,75 +25,39 @@ namespace User_Security_Actions
 
         }
 
-        /*public static async Task SignInAndCreateClients(string[] scopes, string ClientId)
-        {
-            var publicClientApp = PublicClientApplicationBuilder
-            .Create(ClientId)
-            .WithTenantId(Program.TenantId)
-            .WithRedirectUri("http://localhost") // Required for interactive flow
-            .Build();
-
-            AuthenticationResult authResult = null;
-
-            try
-            {
-                 authResult = await publicClientApp
-                .AcquireTokenInteractive(scopes)
-                .ExecuteAsync();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            
-            if (null != authResult)
-            {
-                var httpClient = new HttpClient(new HttpClientHandler
-                {
-                    AllowAutoRedirect = true,
-                    UseCookies = true,
-                    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate,
-                    MaxConnectionsPerServer = int.MaxValue,
-                    UseProxy = true,
-                    Proxy = null,
-                });
-
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
-
-
-                var garaphClient = new GraphServiceClient(httpClient);
-
-                Program.graphClient = garaphClient;
-                Program.httpClient = httpClient;
-                Program.authResult = authResult;
-            }
-            
-        }*/
-
         public static InteractiveBrowserCredential GetCredential(string[] scopes, string ClientId)
         {
+            //options - provide the client ID
             var opts = new InteractiveBrowserCredentialOptions()
             {
                 ClientId = ClientId
             };
+            //create the credential using the opttions.
             InteractiveBrowserCredential cred = new InteractiveBrowserCredential(opts);
 
+            //return the credential
             return cred;
 
         }
 
-        public static HttpClient GetHttpClient (string accessToken)
+        public static HttpClient GetHttpClient (string accessToken, IHttpClientFactory httpClientFactory)
         {
-            var httpClient = new HttpClient();
+            //create the httpclient
+            var httpClient = httpClientFactory.CreateClient("LoggedClient");
+            //specify the authorization header form the accessToken string
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            return new HttpClient();
+            //return the client
+            return httpClient;
         }
 
         public static GraphServiceClient GetGraphClient (HttpClient client)
         {
-            return new GraphServiceClient(client);
+            //create and return the client
+            GraphServiceClient graphClient = new GraphServiceClient(client);
+            return graphClient;
         }
 
+        //old configuration, needs to be removed and replaced in the app.
         public static InteractiveBrowserCredential SignInUserAndGetToken (string[] scopes, string ClientId)
         {
 
