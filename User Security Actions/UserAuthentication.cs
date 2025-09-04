@@ -1,6 +1,8 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Graph.Beta;
+using Microsoft.Extensions.Logging;
 using Microsoft.Graph.Beta.Models;
 using Microsoft.Graph.Beta.Models.ManagedTenants;
 using Microsoft.Graph.Beta.Models.ODataErrors;
@@ -12,6 +14,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using System.Windows.Forms;
 
@@ -33,7 +36,7 @@ namespace User_Security_Actions
                 ClientId = ClientId
             };
             //create the credential using the opttions.
-            InteractiveBrowserCredential cred = new InteractiveBrowserCredential(opts);
+            InteractiveBrowserCredential cred = new(opts);
 
             //return the credential
             return cred;
@@ -57,6 +60,36 @@ namespace User_Security_Actions
             return graphClient;
         }
 
+        public static IHttpClientFactory GetHttpFactory()
+        {
+            var services = new ServiceCollection();
+            IHttpClientFactory httpClientFactory = null;
+
+            //add logging
+            services.AddLogging(builder =>
+            {
+                builder.AddConsole();
+                builder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Debug);
+            });
+
+            // Add HttpClient with logging
+            services.AddHttpClient("LoggedClient").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler());
+
+            // Build the service provider
+            var serviceProvider = services.BuildServiceProvider();
+
+            try
+            {
+                // Get the logger and HttpClient
+                var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+                httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+            } catch (Exception)
+            {
+                throw;
+            }
+
+            return httpClientFactory;
+        }
         //old configuration, needs to be removed and replaced in the app.
         public static InteractiveBrowserCredential SignInUserAndGetToken (string[] scopes, string ClientId)
         {

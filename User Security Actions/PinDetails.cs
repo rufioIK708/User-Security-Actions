@@ -26,7 +26,7 @@ namespace User_Security_Actions
             else
                 labelPinIdDisplay.Text = pin.Id;
 
-            if(pin.CreatedDateTime.HasValue)
+            if (pin.CreatedDateTime.HasValue)
                 labelPinCreatedDisplay.Text = pin.CreatedDateTime.Value.ToLocalTime().ToString();
 
             if (pin.UpdatedDateTime.HasValue)
@@ -47,7 +47,7 @@ namespace User_Security_Actions
         private async void buttonResetPin_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
-            
+
             try
             {
                 GraphCalls.QrPin returnedPin = await GraphCalls.ResetQrCodePin(Program.httpClient, Program.user.Id);
@@ -62,7 +62,29 @@ namespace User_Security_Actions
             {
                 MessageBox.Show(ex.Message);
             }
-            
+
+            this.Cursor = Cursors.Default;
+        }
+
+        private async void buttonResetPin_Click_1(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.WaitCursor;
+
+            try
+            {
+                GraphCalls.QrPin returnedPin = await GraphCalls.ResetQrCodePin(Program.httpClient, Program.user.Id);
+
+                Control parent = this.Parent;
+                parent.Controls.Clear();
+                PinDetails pane = new PinDetails(returnedPin);
+                pane.Dock = DockStyle.Fill;
+                parent.Controls.Add(pane);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
             this.Cursor = Cursors.Default;
         }
     }

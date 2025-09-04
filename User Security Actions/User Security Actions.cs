@@ -189,7 +189,6 @@ namespace User_Security_Actions
         //function to get the user and return the user object
         private static async Task<User> getUser(string upn)
         {
-            Form1.ActiveForm.Cursor = Cursors.WaitCursor;
             User user = new User();
 
             try
@@ -210,7 +209,6 @@ namespace User_Security_Actions
                  + "\nError: " + e.Message);
             }
 
-            Form1.ActiveForm.Cursor = Cursors.Default;
             return user;
         }
 
@@ -506,34 +504,17 @@ namespace User_Security_Actions
         {
             //variable to check if the sign-in was successful
             bool successful = false;
-
-            var services = new ServiceCollection();
-
-            //add logging
-            services.AddLogging(builder =>
-            { 
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Debug);
-            });
-
-            // Add HttpClient with logging
-            services.AddHttpClient("LoggedClient").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler());
-
-            // Build the service provider
-            var serviceProvider = services.BuildServiceProvider();
+            User signedInUser = null;
 
             try
             {
-                // Get the logger and HttpClient
-                var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-
-                //initialize the token
-                //Program.token = UserAuthentication.SignInUserAndGetToken(Program.scopes, Program.ClientId);
-                //await UserAuthentication.SignInAndCreateClients(Program.scopes, Program.ClientId);
+                //create the factory
+                var httpClientFactory = UserAuthentication.GetHttpFactory();
+                //authenticate and get a token.
                 Program.token = UserAuthentication.GetCredential(Program.scopes, Program.ClientId);
                 var tokenRequestContext = new TokenRequestContext(Program.scopes);
-                string accessToken = Program.token.GetToken(tokenRequestContext).Token.ToString();
+                string accessToken = (await Program.token.GetTokenAsync(tokenRequestContext)).Token;
+                //create http and graph clients
                 Program.httpClient = UserAuthentication.GetHttpClient(accessToken, httpClientFactory);
                 Program.graphClient = UserAuthentication.GetGraphClient(Program.httpClient);
             }
@@ -543,18 +524,14 @@ namespace User_Security_Actions
             }
 
 
-
             //verify the user is signed in
             try
             {
                 //get the signed in user
-                User signedInUser = await Program.graphClient.Me.GetAsync();
+                signedInUser = await Program.graphClient.Me.GetAsync();
                 //set the tracking var to true
                 successful = true;
-                //add to the display box
-                modifyRichTextBox(", you signed in as: ");
-                //print the user status
-                printUserStatus(signedInUser);
+
             }
             catch (Exception ex)
             {
@@ -564,6 +541,10 @@ namespace User_Security_Actions
             //update the state of the application
             if (successful)
             {
+                //add to the display box
+                modifyRichTextBox(", you signed in as: ");
+                //print the user status
+                printUserStatus(signedInUser);
                 Program.signedIn = true;
                 //MessageBox.Show("Sign-in successful. State is: " + Program.signedIn);
             }
@@ -580,22 +561,25 @@ namespace User_Security_Actions
         //get and hold a user
         private async void getAUser_Click(object sender, EventArgs e)
         {
-            //if we decide to clear the box
-            //richTextBox1.Clear();
-
-            Program.admin = await Program.graphClient.Me.GetAsync();
-            
+            string inputMessage = "Please enter the ObjectID/UPN of a user";
+            string inputTitle = "Select a User";
+            bool noMfa = false;
             bool result = false;
 
             DialogResult boxCloseMethod = 
-            new textInput("Please enter the ObjectID/UPN of a user", "Select a User", false).ShowDialog();
+            new textInput(inputMessage, inputTitle, noMfa).ShowDialog();
 
-            //copy input to new var
-            var input = Program.input;
-            Program.input = null;
+            //set the wait cursor
+            this.UseWaitCursor = true;
 
-            if (!Program.cancelled)
+            
+
+            if (DialogResult.OK == boxCloseMethod)
             {
+                //copy input to new var
+                var input = Program.input;
+                Program.input = null;
+
                 //try to get the user
                 try
                 {
@@ -649,11 +633,9 @@ namespace User_Security_Actions
                 //refresh the form
                 Form1_Load(sender, e);
             }
-            else
-            {
-                //reset cancelled state and don't do anything else
-                Program.cancelled = false;
-            }
+
+            //fix the cursor
+            this.UseWaitCursor=false;
             
         }
 
@@ -809,28 +791,32 @@ namespace User_Security_Actions
         private async void buttonAddMethod_Click(object sender, EventArgs e)
         {
             //the active user is stored in Program.user and is accessible here
-
+            PhoneAuthenticationMethod requestBody = new();
             //label to show the message in the text box
             string labelMessage = "Please select Phone or Email.";
-            new textInput(labelMessage, "Add Authentication Method", true).ShowDialog();
+            string labelTitle = "Add Authentication Method";
+            bool mfa = true;
+
+            DialogResult inputResult = new textInput(labelMessage,labelTitle, mfa).ShowDialog();
 
             //check if the user cancelled
-            if (!Program.cancelled)
+            if (DialogResult.OK == inputResult)
             {
                 //trim the input
                 string input = Program.input;
+                Program.input = null;
 
                 //check if email method and add.
                 if (Program.methodType == MethodType.Email)
                 {
-                    var requestBody = new EmailAuthenticationMethod
+                    var emailRequestBody = new EmailAuthenticationMethod
                     {
                         EmailAddress = input,
                     };
                     try
                     {
                         var result = await Program.graphClient.Users[Program.user.Id].
-                            Authentication.EmailMethods.PostAsync(requestBody);
+                            Authentication.EmailMethods.PostAsync(emailRequestBody);
                         MessageBox.Show("Email method saved.\nMethod ID: " + result.Id);
                     }
                     catch (Exception err)
@@ -845,75 +831,38 @@ namespace User_Security_Actions
                     {
                         case PhoneOption.Mobile:
                             //add the phone method
-                            var requestBody = new PhoneAuthenticationMethod
-                            {
-                                PhoneNumber = input,
-                                PhoneType = AuthenticationPhoneType.Mobile,
-                            };
-
-                            //submit add request
-                            try
-                            {
-                                var result = await Program.graphClient.Users[Program.user.Id].
-                                    Authentication.PhoneMethods.PostAsync(requestBody);
-                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                            }
-                            catch (Exception err)
-                            {
-                                MessageBox.Show("Error adding phone method. Please try again."
-                                    + "\n" + err.Message);
-                            }
+                            requestBody.PhoneNumber = input;
+                            requestBody.PhoneType = AuthenticationPhoneType.Mobile;
                             break;
 
                         case PhoneOption.AlternateMobile:
                             //add the alternate mobile method
-                            var altRequestBody = new PhoneAuthenticationMethod
-                            {
-                                PhoneNumber = input,
-                                PhoneType = AuthenticationPhoneType.AlternateMobile,
-                            };
-                            //submit add request
-                            try
-                            {
-                                var result = await Program.graphClient.Users[Program.user.Id].
-                                    Authentication.PhoneMethods.PostAsync(altRequestBody);
-                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                            }
-                            catch (Exception err)
-                            {
-                                MessageBox.Show("Error adding alternate mobile method. Please try again."
-                                    + "\n" + err.Message);
-                            }
+                            requestBody.PhoneNumber = input;
+                            requestBody.PhoneType = AuthenticationPhoneType.AlternateMobile;
                             break;
 
                         case PhoneOption.Office:
                             //add the office method
-                            var officeRequestBody = new PhoneAuthenticationMethod
-                            {
-                                PhoneNumber = input,
-                                PhoneType = AuthenticationPhoneType.Office,
-                            };
-                            //submit add request
-                            try
-                            {
-
-                                var result = await Program.graphClient.Users[Program.user.Id].
-                                    Authentication.PhoneMethods.PostAsync(officeRequestBody);
-                                MessageBox.Show(result.Id + "\n" + result.PhoneNumber + "\n" + result.CreatedDateTime);
-                            }
-                            catch (Exception err)
-                            {
-                                MessageBox.Show("Error adding office method. Please try again."
-                                    + "\n" + err.Message);
-                            }
+                            requestBody.PhoneNumber = input;
+                            requestBody.PhoneType = AuthenticationPhoneType.Office;
                             break;
                     }
+
+                    //submit add request
+                    try
+                    {
+                        var result = await Program.graphClient.Users[Program.user.Id].
+                            Authentication.PhoneMethods.PostAsync(requestBody);
+                        modifyRichTextBox("\nID               : " + result.Id + "\n" + 
+                                          "PhoneNumber      : " + result.PhoneNumber + "\n" + 
+                                          "Created DateTime : " + result.CreatedDateTime);
+                    }
+                    catch (Exception err)
+                    {
+                        MessageBox.Show("Error adding phone method. Please try again."
+                            + "\n" + err.Message);
+                    }
                 }
-            }
-            else
-            {
-                //don't do anything and reset cancelled state
-                Program.cancelled = false;
             }
         }
        
