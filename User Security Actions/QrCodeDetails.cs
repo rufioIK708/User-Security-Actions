@@ -68,16 +68,16 @@ namespace User_Security_Actions
                     this.labelidDisplay.Text = qrCode.id;
                 if (null != qrCode.CreatedDateTime)
                     this.labelCreatedDateTimeDisplay.Text =
-                    string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.CreatedDateTime.Value.ToLocalTime().ToString());
+                    string.Format(timeFormat, qrCode.CreatedDateTime.Value.ToLocalTime().ToString());
                 if (null != qrCode.StartDateTime)
                     this.labelStartDateTimeDisplay.Text =
-                    string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.StartDateTime.Value.ToLocalTime().ToString());
+                    string.Format(timeFormat, qrCode.StartDateTime.Value.ToLocalTime().ToString());
                 if (null != qrCode.LastUsedDateTime)
                     this.labelLastUsedDisplay.Text =
-                    string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.LastUsedDateTime.Value.ToLocalTime().ToString());
+                    string.Format(timeFormat, qrCode.LastUsedDateTime.Value.ToLocalTime().ToString());
                 if (null != qrCode.ExpireDateTime)
                     this.labelExpDateTimeDisplay.Text =
-                    string.Format("{0:MMM d, yyyy at hh:mm}", qrCode.ExpireDateTime.Value.ToLocalTime().ToString());
+                    string.Format(timeFormat, qrCode.ExpireDateTime.Value.ToLocalTime().ToString());
                 if (!isStandard)
                     buttonChangeExpDate.Visible = false;
             }

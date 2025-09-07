@@ -101,14 +101,14 @@ namespace User_Security_Actions
             
             bool contains = tableLayoutPanel1.Controls.Contains(textBoxPinEntry);
             int length = textBoxPinEntry.Text.Length;
-            int pinLength = 8;
+            int pinLength = (int)Program.qrPolicy.PinLength;
 
             if (null != Program.qrPolicy.PinLength)
                 pinLength = (int)Program.qrPolicy.PinLength;
 
             //if the PinEntry is available but the entry is under PIN length, let the user know and quit.
-            if (tableLayoutPanel1.Controls.Contains(textBoxPinEntry) &&
-                textBoxPinEntry.Text.Length < Program.qrPolicy.PinLength)
+            if (contains &&
+                textBoxPinEntry.Text.Length < pinLength)
             {
                 MessageBox.Show(messagePinLength);
 
@@ -138,7 +138,7 @@ namespace User_Security_Actions
                 }
 
 
-                if (tableLayoutPanel1.Controls.Contains(textBoxPinEntry))
+                if (contains)
                 {
                     //pin box is visible so we need to get the pin and send a new qrcodepinauthenticationmethod
                     GraphCalls.QrCodePinAuthenticationMethod newMethod = new();

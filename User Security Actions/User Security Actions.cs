@@ -1,26 +1,12 @@
 ﻿using Azure;
 using Azure.Core;
-using Azure.Identity;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Graph.Beta;
 using Microsoft.Graph.Beta.Models;
 //using Microsoft.Graph.Beta.Models.Networkaccess;
 using Microsoft.Graph.Beta.Models.ODataErrors;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics.Eventing.Reader;
-using System.Drawing;
-using System.IdentityModel;
-using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.Xml;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -766,13 +752,15 @@ namespace User_Security_Actions
 
         private async void buttonToggleAccount_Click(object sender, EventArgs e)
         {
+            this.UseWaitCursor = true;
+            User updateUser = new();
             //flip/toggle the value of AccountEnabled
-            Program.user.AccountEnabled = !Program.user.AccountEnabled;
+            updateUser.AccountEnabled = !Program.user.AccountEnabled;
 
             try
             {
                 //update the user with the new AccountEnabled value
-                await Program.graphClient.Users[Program.user.Id].PatchAsync(Program.user);
+                await Program.graphClient.Users[Program.user.Id].PatchAsync(updateUser);
             }
             catch (ODataError err)
             {
@@ -786,6 +774,8 @@ namespace User_Security_Actions
                 + "\nAccount enabled: " + Program.user.AccountEnabled);
             //reload the form so buttons update if necessary
             Form1_Load(sender, e);
+
+            this.UseWaitCursor = false;
         }
 
         private async void buttonAddMethod_Click(object sender, EventArgs e)
@@ -870,31 +860,6 @@ namespace User_Security_Actions
         private async void buttonResetMFA_Click(object sender, EventArgs e)
         {
             bool print = false;
-            //the active user is stored in Program.user and is accessible here
-
-            //there are two methods to reset MFA, either by removing all methods or callin
-            //the reset traditional authentication methods endpoint
-
-            ///////////////////////////////////////////////////
-            //// resetting via traditional authenticaiton endpoint
-            ///////////////////////////////////////////////////
-
-            /****** its not working
-            try
-            {++++++++++++++++++++++++
-                var response = Program.graphClient.
-                "https://graph.microsoft.com/beta/users/" + Program.user.Id +
-                "/authentication/methods/resetTraditionalAuthenticationMethods").
-                ToPostRequestInformation(new AuthenticationMethod { });
-
-                
-                modifyRichTextBox(response.Content.ToString());
-            }
-            catch (ODataError err)
-            {
-                MessageBox.Show(err.Error + "\nError resetting MFA: try again");
-            }
-            **************/
 
             ///////////////////////////////////////////////////
             //// resetting via removing all methods
@@ -918,18 +883,17 @@ namespace User_Security_Actions
             }
             else
             {
-                //////////////////
-                //// the simpler method - remove all methods 3 times.
-                //////////////////
-
                 //loop through the methods and remove all but the password, email, and security questions
                 for (int x = 0; x < 3; x++)
                 {
                     for (int i = 0; i < response.Count; i++)
+                    {
                         //if the method is not a password, email, or security question, remove it.
                         if (response[i].OdataType != Program.passwordAuthMethod &&
                             response[i].OdataType != Program.emailAuthMethod &&
-                            response[i].OdataType != Program.appPasswordAuthMethod)
+                            response[i].OdataType != Program.appPasswordAuthMethod &&
+                            response[i].OdataType != Program.qrCodeAuthMethod &&
+                            response[i].OdataType != Program.tAPAuthMethod)
                         {
                             try
                             {
@@ -943,37 +907,9 @@ namespace User_Security_Actions
                             }
 
                         }
-                }
-                /******
-                ///// the more complicated method
-                ///
-                //loop through the methods and remove all but the password, email, and security questions
-                for (int i = 0; i < response.Count; i++)
-                {
-                    //if the method is not a password, email, or security question, remove it.
-                    if (response[i].OdataType != Program.passwordAuthMethod &&
-                        response[i].OdataType != Program.emailAuthMethod &&
-                        response[i].OdataType != Program.appPasswordAuthMethod)
-                    {
-                        if (response[i].isDefault(await MFAExtras.getRegistrationAuthData(false)))
-                        {
-                            defaultMethod = response[i].Id;
-                            count++;
-                        }
-                        else
-                            await deleteMethod(response[i].Id);
                     }
                 }
-                //reset the default method
-                await deleteMethod(defaultMethod);
-                //**************************************/
             }
-
-
-
-            //MessageBox.Show("methods deleted");
-
-
         }
 
         private async void buttonRemoveMethod_Click(object sender, EventArgs e)
@@ -981,6 +917,7 @@ namespace User_Security_Actions
             string labelMessage = "Please enter the ID of the method to remove.";
             labelMessage += "\nGet the methods first so you can see the IDs.";
             string title = "Remove Authentication Method";
+            string errorMessage = "Error removing method. Please try again.";
 
             bool successful = false;
 
@@ -1002,8 +939,7 @@ namespace User_Security_Actions
                 }
                 catch (Exception err)
                 {
-                    MessageBox.Show("Error removing method. Please try again."
-                        + "\n" + err.Message);
+                    MessageBox.Show(errorMessage + "\n" + err.Message);
                 }
 
                 if (successful)
@@ -1061,11 +997,13 @@ namespace User_Security_Actions
             //Program.graphClient.
             Program.token = null;
             Program.graphClient = null;
+            Program.httpClient = null;
             Program.input = null;
             Program.signedIn = false;
             Program.validUser = false;
             Program.user = null;
             Program.admin = null;
+
 
             displayBox.Clear();
             modifyRichTextBox("Just for reference");
